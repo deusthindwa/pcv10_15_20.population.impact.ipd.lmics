@@ -10,6 +10,7 @@
 # IPD is considered endpoint because its easy to measure. 
 # We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have routine adult PPV23 vaccination. 
 # Newer vaccines are considered as effeCtive as PCV13 but this may be incorrect if additional serotypes reduce effectiveness.
+# Analysis assumes each country's PCV regimen/schedule under which carriage/IPD was observed in mature PCV era. Schedule changes may result in different predictions 
 
 #====================================================================
 
@@ -23,7 +24,7 @@ pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "ri
 #set seed for entire session to ensure reproducibility using a task call
 addTaskCallback(function(...) {set.seed(1988); TRUE})
 
-#turn off the task call for to reset seed if needed
+#turn off the task call to reset seed if needed
 #removeTaskCallback(1)
 
 #====================================================================
