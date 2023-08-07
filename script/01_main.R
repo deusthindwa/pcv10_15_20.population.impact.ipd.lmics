@@ -1,6 +1,16 @@
 #Authors: Deus & Dan
-#Date: 01/03/2023
-#Title: Rebound to normal RSV dynamics post COVID-19 suppression
+#Date: from 01/08/2023
+#Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
+
+#====================================================================
+
+## NOTE
+# We to measure the potential benefits of newer PCVs over existing PCVs.
+# We evaluate the impact of SII's PCV10, Merck's PCV15 and Pfizer's PCV20 on childhood IPD in low-middle income settings. 
+# The first set of analyses is a simple set of calculations looking at the fraction of IPD that could be prevented with these new vaccines. 
+# IPD is considered endpoint because its easy to measure. 
+# We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have no routine PPV23 programs. 
+# Newer vaccines are considered as effeCtive as PCV13 but this may be incorrect if additional serotypes reduce effectiveness.
 
 #====================================================================
 
@@ -12,57 +22,14 @@ pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "ri
                         "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "here"))
 
 #set seed for entire session to ensure reproducibility using a task call
-addTaskCallback(function(...) {set.seed(12345); TRUE})
+addTaskCallback(function(...) {set.seed(1988); TRUE})
 
-#turn off the task call for set seed if needed
+#turn off the task call for to reset seed if needed
 #removeTaskCallback(1)
 
 #====================================================================
 
-#set directory for downloaded datasets
-source("script/02_fileCache.R")
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/02_loadData.R")
 
-#set archiving path for downloaded datasets
-source("script/03_runIfExpired.R")
 
-#load RSV case time series datasets
-source("script/04_loadCases.R")
-
-#plot RSV time series and weekly dynamics
-source("script/05_plotTsWkdyn.R")
-
-#Compute RSV onset timing
-source("script/06_computeOnset.R")
-
-#plot RSV onset timing
-source("script/06_plotOnset.R")
-
-#compute RSV peak timing 
-source("script/07_computePeak.R")
-
-#plot RSV peak timing
-source("script/07_plotPeak.R")
-
-#compute RSV growth rates
-source("script/08_computeGrowth.R")
-
-#plot RSV growth rates
-source("script/08_plotGrowth.R")
-
-#compute intensity
-source("script/09_computeIntensity.R")
-
-#plot RSV intensity
-source("script/09_plotIntensity.R")
-
-#compute and plot univariate regression models of onset, peak, growth rates and intensity
-source("script/10_univarRegress.R")
-
-#compute multivariate regression output of onset, peak, growth rates and intensity
-source("script/11_multivarRegress.R")
-
-#dynamic time warping and time series classification
-source("script/12_dynTimeWarp.R")
-
-#dynamic time warping and time series classification
-source("script/13_computeDesc.R")
