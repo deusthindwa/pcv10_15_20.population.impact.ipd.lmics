@@ -8,7 +8,7 @@
 # We to measure the potential benefits of newer PCVs over existing PCVs.
 # We evaluate the impact of SII's PCV10, Merck's PCV15 and Pfizer's PCV20 on childhood IPD in low-middle income settings. 
 # IPD is considered endpoint because its easy to measure. 
-# We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have no routine PPV23 programs. 
+# We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have routine adult PPV23 vaccination. 
 # Newer vaccines are considered as effeCtive as PCV13 but this may be incorrect if additional serotypes reduce effectiveness.
 
 #====================================================================
