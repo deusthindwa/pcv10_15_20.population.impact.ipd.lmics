@@ -10,6 +10,7 @@
 # IPD is considered endpoint because its easy to measure. 
 # We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have routine adult PPV23 vaccination. 
 # Newer vaccines are considered as effeCtive as PCV13 but this may be incorrect if additional serotypes reduce effectiveness.
+# Hence, consider serological inferiority of higher valency vaccines leading to faster waning below protective thresholds
 # Analysis assumes each country's PCV regimen/schedule under which carriage/IPD was observed in mature PCV era. Schedule changes may result in different predictions 
 
 #====================================================================
@@ -30,6 +31,22 @@ addTaskCallback(function(...) {set.seed(1988); TRUE})
 #====================================================================
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/02_loadData.R")
+source("script/02_manageData.R")
 
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/03_descCarrIPD.R")
 
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/04_estInvasiveness.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/05_preCarrInvasiveModel.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/06_cfrInvasiveModel.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/07_evalModels.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/08_vaccineImpact.R")
