@@ -9,7 +9,7 @@
 # We evaluate the impact of SII's PCV10, Merck's PCV15 and Pfizer's PCV20 on childhood IPD in low-middle income settings. 
 # IPD is considered endpoint because its easy to measure. 
 # We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have routine adult PPV23 vaccination. 
-# Newer vaccines are considered as effeCtive as PCV13 but this may be incorrect if additional serotypes reduce effectiveness.
+# Newer vaccines may not be as effective as PCV13 due to serological inferiority of higher valency PCVs.
 # Hence, consider serological inferiority of higher valency vaccines leading to faster waning below protective thresholds
 # Analysis assumes each country's PCV regimen/schedule under which carriage/IPD was observed in mature PCV era. Schedule changes may result in different predictions 
 
