@@ -19,7 +19,7 @@
 if(!require(pacman)) install.packages("pacman")
 
 #use pacman to load packages for analysis
-pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr",  
+pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr", "MASS",  
                         "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "here"))
 
 #set seed for entire session to ensure reproducibility using a task call
