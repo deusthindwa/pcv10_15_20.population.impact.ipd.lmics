@@ -42,11 +42,7 @@ data_ipd <- data.frame(
 
 #simulate data on age/serotype-specific carbons per capsular polysaccharide repeat unit)
 data_caps <- data.frame(
-  agem = rep(c("0-6m", "7-12m", "13-18m", "19-24m", "25-30m", "31-36m", "37-42m", "43-48m", "49-54m", "55-60m"), 37)) %>%
-  dplyr::group_by(agem) %>%
-  dplyr::mutate(st = c("1", "2", "3", "4", "5", "6A/C", "6B", "7F", "8", "9A", "9N", "9V", "10A", "11A", "12A", "12F", 
-                       "13", "14", "15A", "15B", "15C", "16F", "17F", "18C", "19A", "19F", "20", "22F", "23A", "23F", 
-                       "24F", "31", "33F", "34", "35B", "35F", "38"),
-                ipd = sample(c(20:50), size = 37, replace = TRUE, prob = rep(0.5, 31))) %>%
-  dplyr::ungroup()
-
+  st = c("1", "2", "3", "4", "5", "6A/C", "6B", "7F", "8", "9A", "9N", "9V", "10A", "11A", "12A", "12F", 
+         "13", "14", "15A", "15B", "15C", "16F", "17F", "18C", "19A", "19F", "20", "22F", "23A", "23F", 
+         "24F", "31", "33F", "34", "35B", "35F", "38"),
+  caps = sample(c(2:15), size = 37, replace = TRUE, prob = rep(0.5, 14)))

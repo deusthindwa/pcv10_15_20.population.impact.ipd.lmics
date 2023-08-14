@@ -15,7 +15,8 @@ data_modP <-
   dplyr::left_join(data_ipd) %>%
   dplyr::mutate(log_prev = log(prev),
                 log_fit_inv = log(fit_inv),
-                log_ipd = log(ipd))
+                log_ipd = log(ipd)) %>%
+  dplyr::select(st, fit_inv, log_fit_inv, prev, log_prev, ipd, log_ipd)
 
 #fit a negative-binomial model of carriage prevalence and estimated invasiveness
 model_carr <- tidy(MASS::glm.nb(log_ipd ~ log_prev + log_fit_inv, data = data_modP), 
@@ -29,6 +30,6 @@ data_modP <- data_modP %>%
 #visualize relationship between carriage prevalence and fitted IPD
 data_modP %>%
   ggplot() +
-  geom_line(aes(x = prev, y = fit_ipd, color = st)) +
+  geom_point(aes(x = prev, y = fit_ipd, color = st)) +
   theme_bw() + 
   theme(legend.position = "none")
