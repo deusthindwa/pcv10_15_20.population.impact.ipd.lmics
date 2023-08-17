@@ -18,8 +18,7 @@ data_inv <-
 data_carr <-
   rio::import(here("output", "data_carr.csv")) %>%
   dplyr::select(study, time_interval, type, carriage_samples, carriage) %>%
-  dplyr::rename("period" = "time_interval", "nsamples" = "carriage_samples", "ncarr" = "carriage") %>%
-  dplyr::mutate(prevcarr = ncarr/nsamples)
+  dplyr::rename("period" = "time_interval", "nsamples" = "carriage_samples", "ncarr" = "carriage", "st" = "type")
 
 #import ipd data for different settings from Croucher et al.
 # data_ipd <- rio::import("https://raw.githubusercontent.com/nickjcroucher/progressionEstimation/main/data-raw/S_pneumoniae_infant_serotype.csv")
@@ -27,7 +26,7 @@ data_carr <-
 data_ipd <-
   rio::import(here("output", "data_ipd.csv")) %>%
   dplyr::select(study, time_interval, type, surveillance_population, disease) %>%
-  dplyr::rename("period" = "time_interval", "npop" = "surveillance_population", "nipd" = "disease")
+  dplyr::rename("period" = "time_interval", "npop" = "surveillance_population", "nipd" = "disease", "st" = "type")
 
 #====================================================================
 

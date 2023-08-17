@@ -4,46 +4,46 @@
 
 #====================================================================
 
-#data description of carriage
-data_carr <-
+#manipulation of carriage and ipd data
+data_carr1 <-
 data_carr %>%
   dplyr::mutate(country = word(study, 1, sep = "\\."),
                 phase = str_detect(study, "pre"),
-                phase = if_else(str_detect(study, "pre") == TRUE, "prePCV", "postPCV")) %>%
+                phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv carriage", "post-pcv carriage"),
+                ncarr = ncarr+1) %>% #add 1 positive carriage sample to avoid math errors
   dplyr::select(country, phase, period, everything(), -study)
 
-#carriage descriptive plot
-data_carr1 <-
-data_carr %>% 
-  dplyr::filter(country == "Bogota")
-
-data_carr1 %>%
-  dplyr::group_by(type, phase) %>%
-  dplyr::mutate(prev = mean(prevcarr)) %>%
-  dplyr::ungroup() %>%
-  ggplot() +
-  geom_point(aes(y = type, x = prev)) +
-  theme_bw() +
-  facet_grid(.~phase)
-
-#====================================================================
-
-#data description of ipd
-data_ipd <-
+data_ipd1 <-
   data_ipd %>%
   dplyr::mutate(country = word(study, 1, sep = "\\."),
                 phase = str_detect(study, "pre"),
-                phase = if_else(str_detect(study, "pre") == TRUE, "prePCV", "postPCV")) %>%
+                phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv ipd", "post-pcv ipd"),
+                nipd = nipd+1) %>% #add 1 positive ipd isolate to avoid math errors
   dplyr::select(country, phase, period, everything(), -study)
 
-#carriage descriptive plot
-data_ipd1 <-
-  data_ipd %>% 
-  dplyr::filter(country == "Bogota")
+#====================================================================
 
-data_ipd1 %>%
-  dplyr::group_by(type, phase) %>%
+#save descriptive plot for carriage and ipd
+ggsave(here("output", "fig1_carripdDesc.png"),
+plot = (
+
+#carriage descriptive plot
+data_carr1 %>% 
+  dplyr::filter(country == "Bogota") %>%
   ggplot() +
-  geom_point(aes(y = type, x = log(nipd))) +
+  geom_point(aes(y = st, x = log(ncarr), color = phase), size = 2.5) +
   theme_bw() +
-  facet_grid(.~phase)
+  facet_grid(.~factor(phase, levels = c("pre-pcv carriage", "post-pcv carriage"))) +
+  theme(legend.position = "none") |
+
+#ipd description plot
+data_ipd1 %>% 
+  dplyr::filter(country == "Bogota") %>%
+  ggplot() +
+  geom_point(aes(y = st, x = log(nipd), color = phase), size = 2.5) +
+  theme_bw() +
+  facet_grid(.~ factor(phase, levels = c("pre-pcv ipd", "post-pcv ipd"))) + 
+  theme(legend.position = "none")
+
+), width = 10, height = 8, unit = "in", dpi = 300)
+  
