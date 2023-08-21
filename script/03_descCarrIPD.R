@@ -4,46 +4,91 @@
 
 #====================================================================
 
-#manipulation of carriage and ipd data
-data_carr1 <-
-data_carr %>%
-  dplyr::mutate(country = word(study, 1, sep = "\\."),
-                phase = str_detect(study, "pre"),
-                phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv carriage", "post-pcv carriage"),
-                ncarr = ncarr+1) %>% #add 1 positive carriage sample to avoid math errors
-  dplyr::select(country, phase, period, everything(), -study)
+#description of the invasiveness, carriage and ipd datasets
 
-data_ipd1 <-
-  data_ipd %>%
-  dplyr::mutate(country = word(study, 1, sep = "\\."),
-                phase = str_detect(study, "pre"),
-                phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv ipd", "post-pcv ipd"),
-                nipd = nipd+1) %>% #add 1 positive ipd isolate to avoid math errors
-  dplyr::select(country, phase, period, everything(), -study)
+#invasiveness descriptive plot
+A <-
+  data_inv %>% 
+  ggplot() +
+  geom_point(aes(x = reorder(st, log_inv), y = log_inv), size = 2.5, shape = 4, stroke = 2) +
+  theme_bw(base_size = 14, base_family = "American Typewriter") +
+  labs(title = "(A), invasiveness", x = "Log_invasiveness", y = "Pneumococcal serotype") + 
+  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+  theme(legend.text = element_text(size = 12), legend.position = "none", legend.title = element_text(size = 0)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #====================================================================
 
-#save descriptive plot for carriage and ipd
+#carriage description for Malawi
+B <-
+  data_desc %>%
+  dplyr::filter(country == "Bogota") %>%
+  ggplot() +
+  geom_point(aes(y = reorder(st, est), x = est, color = cat), size = 2.5, shape = 4, stroke = 2, position = position_dodge2(width = 0.5), stat = "identity") +
+  theme_bw(base_size = 14, base_family = "American Typewriter") +
+  scale_color_manual(values=c("darkgreen", "darkred")) +
+  scale_x_continuous(sec.axis = sec_axis(~ . - 20/10)) +
+  labs(title = "(B)", x = "Log_carriage prevalence/IPD", y = "") + 
+  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7,0.2), legend.title = element_text(size = 12)) +
+  guides(color = guide_legend(title = "Bogota")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#====================================================================
+
+#carriage description for Malawi
+C <-
+  data_desc %>%
+  dplyr::filter(country == "Alabama") %>%
+  ggplot() +
+  geom_point(aes(y = reorder(st, est), x = est, color = cat), size = 2.5, shape = 4, stroke = 2, position = position_dodge2(width = 0.5), stat = "identity") +
+  theme_bw(base_size = 14, base_family = "American Typewriter") +
+  scale_color_manual(values=c("darkgreen", "darkred")) +
+  labs(title = "(C)", x = "Log_carriage prevalence/IPD", y = "") + 
+  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7,0.2), legend.title = element_text(size = 12)) +
+  guides(color = guide_legend(title = "Alabama")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#====================================================================
+
+#carriage description for Malawi
+D <-
+  data_desc %>%
+  dplyr::filter(country == "Caracas") %>%
+  ggplot() +
+  geom_point(aes(y = reorder(st, est), x = est, color = cat), size = 2.5, shape = 4, stroke = 2, position = position_dodge2(width = 0.5), stat = "identity") +
+  theme_bw(base_size = 14, base_family = "American Typewriter") +
+  scale_color_manual(values=c("darkgreen", "darkred")) +
+  labs(title = "(D)", x = "Log_carriage prevalence/IPD", y = "") + 
+  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7,0.2), legend.title = element_text(size = 12)) +
+  guides(color = guide_legend(title = "Caracas")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#====================================================================
+
+#carriage description for Malawi
+E <-
+  data_desc %>%
+  dplyr::filter(country == "Czech") %>%
+  ggplot() +
+  geom_point(aes(y = reorder(st, est), x = est, color = cat), size = 2.5, shape = 4, stroke = 2, position = position_dodge2(width = 0.5), stat = "identity") +
+  theme_bw(base_size = 14, base_family = "American Typewriter") +
+  scale_color_manual(values=c("darkgreen", "darkred")) +
+  labs(title = "(E)", x = "Log_carriage prevalence/IPD", y = "") + 
+  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7,0.2), legend.title = element_text(size = 12)) +
+  guides(color = guide_legend(title = "Czech")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#====================================================================
+
 ggsave(here("output", "fig1_carripdDesc.png"),
-plot = (
-
-#carriage descriptive plot
-data_carr1 %>% 
-  dplyr::filter(country == "Bogota") %>%
-  ggplot() +
-  geom_point(aes(y = st, x = log(ncarr), color = phase), size = 2.5) +
-  theme_bw() +
-  facet_grid(.~factor(phase, levels = c("pre-pcv carriage", "post-pcv carriage"))) +
-  theme(legend.position = "none") |
-
-#ipd description plot
-data_ipd1 %>% 
-  dplyr::filter(country == "Bogota") %>%
-  ggplot() +
-  geom_point(aes(y = st, x = log(nipd), color = phase), size = 2.5) +
-  theme_bw() +
-  facet_grid(.~ factor(phase, levels = c("pre-pcv ipd", "post-pcv ipd"))) + 
-  theme(legend.position = "none")
-
-), width = 10, height = 8, unit = "in", dpi = 300)
-  
+       plot = (A / (B | C | D | E) + plot_layout(heights = c(1,2.5))), 
+       width = 20, height = 10, unit = "in", dpi = 300)

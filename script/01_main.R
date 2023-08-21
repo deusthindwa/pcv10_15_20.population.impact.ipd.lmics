@@ -11,7 +11,7 @@
 # We could underestimate preventable burden if PPV23 was already in use but considered low-middle income countries do not have routine adult PPV23 vaccination. 
 # Newer vaccines may not be as effective as PCV13 due to serological inferiority of higher valency PCVs.
 # Hence, consider serological inferiority of higher valency vaccines leading to faster waning below protective thresholds
-# Analysis assumes each country's PCV regimen/schedule under which carriage/IPD was observed in mature PCV era. Schedule changes may result in different predictions 
+# Analysis assumes each country's PCV regimen/schedule under which carriage/IPD was observed in mature PCV era. Schedule changes may change results
 
 #====================================================================
 
