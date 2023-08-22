@@ -20,25 +20,14 @@ data_all <-
   dplyr::mutate(country = word(study, 1, sep = "\\."),
                 phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv", "post-pcv")) %>%
   dplyr::select(country, phase, time_interval, type, carriage_samples, carriage, surveillance_population, disease) %>%
-  dplyr::rename("period" = "time_interval", "st" = "type",  "nsamples"= "carriage_samples", "ncarr" = "carriage",  "npop" = "surveillance_population", "nipd" = "disease") %>%
+  dplyr::rename("period" = "time_interval", 
+                "st" = "type",  
+                "nsamples"= "carriage_samples", 
+                "ncarr" = "carriage",  
+                "npop" = "surveillance_population", 
+                "nipd" = "disease") %>%
   dplyr::mutate(prevcarr = ncarr/nsamples,
                 log_prevcarr = log(prevcarr+0.5),
                 log_nipd = log(nipd+0.5)) %>%
   dplyr::filter(phase == "pre-pcv") %>%
   dplyr::select(country:ncarr, prevcarr, npop:log_nipd)
-
-#restructure data for plotting
-data_desc <-
-  bind_rows(
-    data_all %>%
-      dplyr::select(country, phase, st, log_prevcarr) %>%
-      dplyr::rename("est" = "log_prevcarr") %>%
-      dplyr::mutate(cat = "carriage"),
-    
-    data_all %>%
-      dplyr::select(country, phase, st, log_nipd) %>%
-      dplyr::rename("est" = "log_nipd") %>%
-      dplyr::mutate(cat = "ipd")
-    )
-
-
