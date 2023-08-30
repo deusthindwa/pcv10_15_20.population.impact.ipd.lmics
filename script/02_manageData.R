@@ -28,6 +28,6 @@ data_all <-
                 "nipd" = "disease") %>%
   dplyr::mutate(prevcarr = ncarr/nsamples,
                 log_prevcarr = log(prevcarr+0.5),
-                log_nipd = log(nipd+0.5)) %>%
-  dplyr::filter(phase == "pre-pcv") %>%
-  dplyr::select(country:ncarr, prevcarr, npop:log_nipd)
+                log_npop = log(npop)) %>%
+  #dplyr::filter(phase == "pre-pcv") %>%
+  dplyr::select(country:ncarr, prevcarr, log_prevcarr, log_npop, nipd)
