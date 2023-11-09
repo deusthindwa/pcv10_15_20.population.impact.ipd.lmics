@@ -1,10 +1,10 @@
 #Authors: Deus & Dan
 #Date: from 01/08/2023
-#Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
+#Title: Potential benefits of newer pneumococcal vaccines against pediatric invasive pneumococcal disease in low- and middle-countries
 
 #====================================================================
 
-## NOTE
+##CONSIDERATION
 # We to measure the potential benefits of newer PCVs over existing PCVs.
 # We evaluate the impact of SII's PCV10, Merck's PCV15 and Pfizer's PCV20 on childhood IPD in low-middle income settings. 
 # IPD is considered endpoint because its easy to measure. 
@@ -20,9 +20,9 @@ if(!require(pacman)) install.packages("pacman")
 
 #use pacman to load packages for analysis
 pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr", "MASS",  
-                        "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "here"))
+                        "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "missForest", "here"))
 
-#set seed for entire session to ensure reproducibility using a task call
+#set seed using a task call for entire session to ensure reproducibility
 addTaskCallback(function(...) {set.seed(1988); TRUE})
 
 #turn off the task call to reset seed if needed

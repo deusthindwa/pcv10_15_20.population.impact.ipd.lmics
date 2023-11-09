@@ -47,7 +47,7 @@ A <-
   ggplot(aes(x = fit_ipd, y = log(nipd), color = st)) +
   geom_point(size = 2.5, shape = 1, stroke = 2) +
   geom_text(aes(label = st), size = 3, angle = 45, fontface = "bold", vjust = 2, hjust = 0.5) +
-  geom_text(aes(x = 3, y = 6, label = paste0("Spearman,p = ", spcoef, ", \n[95%CI = ", spearmanCI(fit_ipd, nipd)[1], "-", spearmanCI(fit_ipd, nipd)[2], "]")), color = "black", size = 4) +
+  geom_text(aes(x = 3, y = 6, label = paste0("Spearman, p = ", spcoef, ", \n[95%CI = ", spearmanCI(fit_ipd, nipd)[1], "-", spearmanCI(fit_ipd, nipd)[2], "]")), color = "black", size = 4) +
   expand_limits(x = c(-1,7), y = c(-1,7)) +
   theme_bw(base_size = 14, base_family = "American Typewriter") +
   labs(title = "(A)", x = "invasive disease (model estimate)", y = "log_invasive disease (observed)") + 
@@ -57,17 +57,18 @@ A <-
 
  #====================================================================
 
-#visualise relationship between serotype rank order and Obs-Pred cumulative disease
+#visualize relationship between serotype rank order and Obs-Pred cumulative disease
  data_Bogota0 <- 
    data_Bogota0 %>%
    dplyr::filter(!is.na(fit_ipd)) %>%
    dplyr::mutate(nipdR = dplyr::min_rank(nipd),
                  fit_ipdR = dplyr::min_rank(fit_ipd)) %>%
    dplyr::arrange(fit_ipdR) %>%
-   dplyr::mutate(fit_ipdCum = cumsum(fit_ipd)/sum(fit_ipd)) %>%
+   dplyr::mutate(fit_ipdCum = cumsum(fit_ipd)/sum(fit_ipd),
+                 st_contrib = fit_ipd/sum(fit_ipd)) %>%
    dplyr::arrange(nipdR) %>%
    dplyr::mutate(nipdCum = cumsum(nipd)/sum(nipd))
-  
+
 B <-
   data_Bogota0 %>%
   ggplot() +
@@ -91,7 +92,3 @@ ggsave(here("output", "fig2_serotypeRank.png"),
 
 #delete all plot objects
 rm(list = grep("data_|model", ls(), value = TRUE, invert = TRUE))
-
-
-
-
