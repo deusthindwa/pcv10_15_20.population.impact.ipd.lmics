@@ -3,16 +3,89 @@
 #Title: Potential benefits of newer pneumococcal vaccines on pediatric invasive pneumococcal disease in low- and middle-countries
 
 #====================================================================
-
+#SEROTYPE DISTRIBUTION PLOT
+#====================================================================
 #set the colors for each year
-palx <- c("2006" = "#D16A5D", "2007" = "#E358A0", "2008" = "#8872D9", "2009" = "#C04AE1", "2010" = "#D598D9",
-          "2011" = "#E0B1BC", "2012" = "#E3B45B", "2013" = "#D5E1E2", "2014" = "#84967C", "2015" = "#86AADA",
-          "2016" = "#77DAD9", "2017" = "#84E4A6", "2018" = "#75EA5C", "2019" = "#C8DE5A")
+palx <- c("2005" = "#8B0019", "2006" = "#D16A5F", "2007" = "#E358A0", "2008" = "#8872D9", "2009" = "#C04AE1",
+          "2010" = "#D598D9", "2011" = "#E0B1BC", "2012" = "#E3B45B", "2013" = "#D5E1E2", "2014" = "#84967C",
+          "2015" = "#86AADA", "2016" = "#77DAD9", "2017" = "#84E4A6", "2018" = "#75EA5C", "2019" = "#C8DE5A")
 
+#Malawi
+A <-
+  bind_rows(mw_ipdb2011, mw_ipda2015) %>%
+  group_by(country, yearc, st) %>%
+  tally() %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>% 
+  filter(!is.na(st)) %>%
+  group_by(country, st) %>%
+  mutate(NN = sum(n)) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_col(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
+  theme_bw(base_size = 16, base_family = "Lato") +
+  scale_fill_manual(values = palx) +
+  labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
+  facet_wrap(.~country) +
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  guides(fill = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
-#description of serotype-specific IPD isolates
-#select limited vars for plotting from all datasets
-X <-
+#Israel
+B <-
+  bind_rows(is_ipdb2009, is_ipda2013) %>%
+  group_by(country, yearc, st) %>%
+  tally() %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>% 
+  filter(!is.na(st)) %>%
+  group_by(country, st) %>%
+  mutate(NN = sum(n)) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_col(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
+  theme_bw(base_size = 16, base_family = "Lato") +
+  scale_fill_manual(values = palx) +
+  labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
+  facet_wrap(.~country) +
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  guides(fill = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#South Africa
+C <-
+  bind_rows(sa_ipdb2009, sa_ipda2015) %>%
+  group_by(country, yearc, st) %>%
+  tally() %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>%filter(!is.na(st)) %>%
+  group_by(country, st) %>%
+  mutate(NN = sum(n)) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_col(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
+  theme_bw(base_size = 16, base_family = "Lato") +
+  scale_fill_manual(values = palx) +
+  labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
+  facet_wrap(.~country) +
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  guides(fill = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "sfig1_stDist.png"),
+       plot = ((A/B) | C), 
+       width = 18, height = 18, unit = "in", dpi = 300)
+
+#====================================================================
+#VACCINE SEROTYPE GROUPS DISTRIBUTION PLOT
+#====================================================================
+
+#combine all IPD datasts and generate vaccine serotype
+ipd_sg <-
 bind_rows(
   mw_ipdb2011 %>% dplyr::select(yearc, st, country), 
   mw_ipda2015 %>% dplyr::select(yearc, st, country),
@@ -20,79 +93,51 @@ bind_rows(
   is_ipda2013 %>% dplyr::select(yearc, st, country),
   sa_ipdb2009 %>% dplyr::select(yearc, st, country),
   sa_ipda2015 %>% dplyr::select(yearc, st, country)) %>%
-  dplyr::mutate(stx = if_else(grepl("4|6B|9V|14|18C|19F|23F|1|5|7F|3|6A|19A|22F|33F|15B|8|10A|11A|12F", st) == TRUE, st, "NVT")) %>%
+  dplyr::mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", "NVT"),
+                pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV15", "NVT"),
+                pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT"),
+                pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "PCV10-sii", "NVT"),
+                pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "PCV10-gsk", "NVT"),
+                pcv7pfz = if_else(grepl("4|6B|9V|14|18C|19F|23F", st) == TRUE, "PCV7", "NVT"))
 
-bind_rows() %>%
-  group_by(country, yearc, st) %>%
+  
+group_by(country, yearc, pcv20pfz) %>%
   tally() %>%
-  mutate(N = sum(n), p = n/N*100) %>%
-  ungroup() %>%filter(!is.na(st)) %>%
-  group_by(country, st) %>%
+  mutate(N = sum(n)) %>%
+  ungroup() %>% 
+  filter(!is.na(pcv20pfz)) %>%
+  group_by(country, pcv20pfz) %>%
   mutate(NN = sum(n)) %>%
   ungroup() %>%
   ggplot() +
-  geom_bar(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack", stat = "identity") +
-  theme_bw(base_size = 14, base_family = "American Typewriter") +
+  geom_col(aes(x = log(n+0.5), y = reorder(pcv20pfz, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
+  theme_bw(base_size = 16, base_family = "Lato") +
   scale_fill_manual(values = palx) +
-  labs(title = "Malawi", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
-  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+  labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
   facet_wrap(.~country) +
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
   theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 
-#save combined plots
-ggsave(here("output", "fig2_serotypeRank.png"),
-       plot = (A | B), 
-       width = 12, height = 8, unit = "in", dpi = 300)
 
 
-#Israel
-bind_rows(is_ipdb2009, is_ipda2013) %>%
-  group_by(yearc, st) %>%
-  tally() %>%
-  mutate(N = sum(n), p = n/N*100) %>%
-  ungroup() %>%filter(!is.na(st)) %>%
-  group_by(st) %>%
-  mutate(NN = sum(n)) %>%
-  ungroup() %>%
-  ggplot() +
-  geom_bar(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack", stat = "identity") +
-  theme_bw(base_size = 14, base_family = "American Typewriter") +
-  scale_fill_manual(values = palx) +
-  labs(title = "Israel", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
-  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
-  guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
-
-#South Africa
-X <-
-bind_rows(sa_ipdb2009, sa_ipda2014) %>%
-  group_by(yearc, st) %>%
-  tally() %>%
-  mutate(N = sum(n), p = n/N*100) %>%
-  ungroup() %>%filter(!is.na(st)) %>%
-  group_by(st) %>%
-  mutate(NN = sum(n)) %>%
-  ungroup() %>%
-  ggplot() +
-  geom_bar(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack", stat = "identity") +
-  theme_bw(base_size = 14, base_family = "American Typewriter") +
-  scale_fill_manual(values = palx) +
-  labs(title = "Israel", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
-  theme(axis.text.y = element_text(face = "bold", size = 10)) + 
-  guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 
+
+
+
+
+
+
+
+#====================================================================
+#
+#====================================================================
 
 #set color for all plots
 cols <- c("IPD"="darkviolet", "carriage" = "chartreuse4")
-
-#====================================================================
 
 #invasiveness descriptive plot
 A <-
