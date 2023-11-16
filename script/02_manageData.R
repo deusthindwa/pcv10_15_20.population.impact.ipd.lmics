@@ -8,6 +8,7 @@
 
 #notes
 #PCV13 introduced in Nov 2011 under 3+0 dosing schedule
+#serotyping done using...
 
 #import pre-PCV13 pediatric invasive disease data
 mw_ipdb2011 <-
@@ -87,6 +88,7 @@ mw_cara2015 <-
 
 #notes
 #PCV7 introduced in July 2009 and replaced by PCV13 in Nov 2010 under 2+1 dosing schedule
+#serotyping done using....
 
 #import pre- and post-PCV7 pediatric invasive disease data
 is_ipdb2009 <- is_ipda2013 <-
@@ -149,6 +151,7 @@ is_cara2013 <-
 
 #notes
 #PCV7 introduced in April 2009 and replaced by PCV13 in Nov 2011 under 2+1 dosing schedule
+#serotyping done using...
 
 #import pre- and post-PCV7 pediatric invasive disease data
 sa_ipdb2009 <- sa_ipda2015 <-

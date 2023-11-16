@@ -84,6 +84,8 @@ ggsave(here("output", "sfig1_stDist.png"),
 #VACCINE SEROTYPE GROUPS DISTRIBUTION PLOT
 #====================================================================
 
+paly = c("PCV7" = "#C04AE1", "PCV10-gsk" = "#D598D9", "PCV10-sii" = "#D16A5F", "PCV13" = "#E3B45B", "PCV15" = "#C8DE5A", "PCV20" = "#84967C")
+
 #combine all IPD datasts and generate vaccine serotype
 ipd_sg <-
 bind_rows(
@@ -100,37 +102,69 @@ bind_rows(
                 pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "PCV10-gsk", "NVT"),
                 pcv7pfz = if_else(grepl("4|6B|9V|14|18C|19F|23F", st) == TRUE, "PCV7", "NVT"))
 
-  
-group_by(country, yearc, pcv20pfz) %>%
+D <-
+bind_rows(
+  ipd_sg %>%
+  group_by(country, yearc, pcv20pfz) %>%
   tally() %>%
-  mutate(N = sum(n)) %>%
+  mutate(N = sum(n), p = n/N) %>%
   ungroup() %>% 
-  filter(!is.na(pcv20pfz)) %>%
-  group_by(country, pcv20pfz) %>%
-  mutate(NN = sum(n)) %>%
-  ungroup() %>%
+  rename("sg" = "pcv20pfz"),
+  
+  ipd_sg %>%
+  group_by(country, yearc, pcv15mek) %>%
+  tally() %>%
+  mutate(N = sum(n), p = n/N) %>%
+  ungroup() %>% 
+  rename("sg" = "pcv15mek"),
+  
+  ipd_sg %>%
+  group_by(country, yearc, pcv13pfz) %>%
+  tally() %>%
+  mutate(N = sum(n), p = n/N) %>%
+  ungroup() %>% 
+  rename("sg" = "pcv13pfz"),
+  
+  ipd_sg %>%
+  group_by(country, yearc, pcv10sii) %>%
+  tally() %>%
+  mutate(N = sum(n), p = n/N) %>%
+  ungroup() %>% 
+  rename("sg" = "pcv10sii"),
+  
+  ipd_sg %>%
+  group_by(country, yearc, pcv10gsk) %>%
+  tally() %>%
+  mutate(N = sum(n), p = n/N) %>%
+  ungroup() %>% 
+  rename("sg" = "pcv10gsk"),
+  
+  ipd_sg %>%
+  group_by(country, yearc, pcv7pfz) %>%
+  tally() %>%
+  mutate(N = sum(n), p = n/N) %>%
+  ungroup() %>% 
+  rename("sg" = "pcv7pfz")) %>%
+  filter(!is.na(sg)) %>%
+  
+  dplyr::filter(sg != "NVT") %>%
+  
   ggplot() +
-  geom_col(aes(x = log(n+0.5), y = reorder(pcv20pfz, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
+  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0))), size = 1.5) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  scale_fill_manual(values = palx) +
-  labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
+  scale_color_manual(values = paly) +
+  scale_x_continuous(breaks = c(2005, 2009, 2013, 2017), limits = c(2005, 2019)) +
+  labs(title = "", x = "sampling year", y = "proportion of vaccine serotype IPD") + 
   facet_wrap(.~country) +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
-  guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
+  guides(color = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
-
-
-
-
-
-
-
-
-
-
-
+#save combined plots
+ggsave(here("output", "sfig2_sgDist.png"),
+       plot = (D), 
+       width = 12, height = 9, unit = "in", dpi = 300)
 
 #====================================================================
 #

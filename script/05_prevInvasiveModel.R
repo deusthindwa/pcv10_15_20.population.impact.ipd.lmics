@@ -1,6 +1,21 @@
 #Authors: Deus & Dan
 #Date: from 01/08/2023
 #Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
+ 
+#====================================================================
+
+#fit a negative-binomial model of carriage prevalence and estimated invasiveness
+model1 <- MASS::glm.nb(nipd ~ log_prevcarr + log_inv, 
+                       data = data_Bogota0,
+                       control = glm.control(maxit = 25, trace = T), 
+                       link = log)
+
+#add model estimates to the dataset
+data_Bogota0 <- 
+  data_Bogota0 %>% 
+  dplyr::mutate(fit_ipd = model1$coefficients[1] + model1$coefficients[2]*log_prevcarr + model1$coefficients[3]*log_inv)
+
+
 
 #====================================================================
 
