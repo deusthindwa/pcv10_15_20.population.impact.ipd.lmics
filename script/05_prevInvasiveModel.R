@@ -3,6 +3,15 @@
 #Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
  
 #====================================================================
+#assumptions
+#-assumes perfectly monitored homogeneous population
+#-also work even if IPD and carriage surveillance are imperfectly sensitive as long as don't change post-vax
+#-assumes VT are completely eliminated in post-PCV era
+#-assumes invasiveness ratio remains constant before and after PCV introduction
+#-assumes estimates only apply in mature PCV program, has been in use for a long time
+#-assumes IPD and carriage are a representative of the population from which samples are generated
+#-assumes the mean carriage duration of VT and NVT is similar allowing calculation of odds VT (VT/NVT)
+
 
 #fit a negative-binomial model of carriage prevalence and estimated invasiveness
 model1 <- MASS::glm.nb(nipd ~ log_prevcarr + log_inv, 
