@@ -3,77 +3,75 @@
 #Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
  
 #====================================================================
-#assumptions
-#-assumes perfectly monitored homogeneous population
-#-also work even if IPD and carriage surveillance are imperfectly sensitive as long as don't change post-vax
-#-assumes VT are completely eliminated in post-PCV era
-#-assumes invasiveness ratio remains constant before and after PCV introduction
-#-assumes estimates only apply in mature PCV program, has been in use for a long time
-#-assumes IPD and carriage are a representative of the population from which samples are generated
-#-assumes the mean carriage duration of VT and NVT is similar allowing calculation of odds VT (VT/NVT)
+#INVASIVENESS DATA MANIPULATION
+#====================================================================
 
-#required equations
-#Q = D/C, Qvt = Dvt/Cvt, Qnvt = Dnvt/Cnvt, invasiveness
-#D = Cvt * Qvt + Cnvt * Qnvt, IPD rate in pre-PCV era}
-#Cvt' = 0 assumes vaccine type is eliminated after PCV introduction
-#y is the prop of pre-PCV VT being replaced by post-PCV NVT
-#Cnvt' = Cnvt + y * Cvt
-#Qnvt' = Qnvt, NVT invasiveness doesn't change after PCV introduction
-#D' = Cvt' * Qvt' + Cnvt' * Qnvt', IPD rate in post-PCV era
-#D' = 0 + (Cnvt + y * Cvt) * Qnvt = (Cnvt + y * Cvt) * Qnvt
-#IRR = D'/D = [(Cnvt + y * Cvt) * Qnvt]/[Cvt * Qvt + Cnvt * Qnvt], divide by Cnvt, then Qnvt to get below equation
-#IRR = [y*c+1]/[d+1], where c = Cvt/Cnvt, d = Dvt/Dnvt
+# #import invasiveness data from Navajo et al. and store it in computer hard drive
+# #data_inv <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
+# #data_inv %>% readr::write_csv(x = ., file = here("data", "data_inv.csv"))
+# data_inv <-
+#   rio::import(here("data", "invasiveness_global.csv")) %>%
+#   dplyr::select(everything(), -V1, -log.inv.prec.age1) %>%
+#   dplyr::rename("log_inv" = "log.inv.age1")
+# 
+# #import carriage and ipd datasets
+# #data_all <- rio::import("https://raw.githubusercontent.com/nickjcroucher/progressionEstimation/main/data-raw/S_pneumoniae_infant_serotype.csv")
+# #data_all %>% readr::write_csv(x = ., file = here("data", "data_all.csv"))
+# data_all <- 
+#   rio::import(here("data", "data_all.csv")) %>%
+#   dplyr::mutate(country = word(study, 1, sep = "\\."),
+#                 phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv", "post-pcv")) %>%
+#   dplyr::select(country, phase, time_interval, type, carriage_samples, carriage, surveillance_population, disease) %>%
+#   dplyr::rename("period" = "time_interval", 
+#                 "st" = "type",  
+#                 "nsamples"= "carriage_samples", 
+#                 "ncarr" = "carriage",  
+#                 "npop" = "surveillance_population", 
+#                 "nipd" = "disease") %>%
+#   dplyr::mutate(prevcarr = ncarr/nsamples,
+#                 log_prevcarr = log(prevcarr+0.5),
+#                 log_npop = log(npop)) %>%
+#   #dplyr::filter(phase == "pre-pcv") %>%
+#   dplyr::select(country:ncarr, prevcarr, log_prevcarr, log_npop, nipd)
 
-#Israel
-#calculate observed IPD incidence rate ratio (IRR)
-bind_cols(
-is_ipdb2009 %>%
-  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
-  group_by(pcv13pfz) %>%
-  tally() %>%
-  ungroup() %>%
-  rename("n1" = "n") %>%
-  mutate(fup1 = 1,
-         N1 = 7500000,
-         incid1 = n1/(N1*fup1)),
 
-is_ipda2013 %>%
-  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
-  group_by(pcv13pfz) %>%
-  tally() %>%
-  ungroup() %>%
-  rename("n2" = "n") %>%
-  mutate(fup2 = 4,
-         N2 = 9000000,
-         incid2 = n2/(N2*fup2)) %>%
-  dplyr::select(everything(), -pcv13pfz)
-) %>%
-  mutate(irr = incid2/incid1)
+# #infer carriage data pre-PCV13 introduction in Malawi based on invasiveness and pre_PCV13 IPD
+# #fit a negative-binomial model of obs IPD and estimated invasiveness
+# mw_carb2011 <- mw_ipdb2011 + invasiveness data
+# model1 <- MASS::glm.nb(nipd ~ log_prevcarr + log_inv, 
+#                        data = mw_carb2011,
+#                        control = glm.control(maxit = 25, trace = T), 
+#                        link = log)
+# 
+# #add model estimates to the dataset
+# mw_carb2011 <- 
+#   mw_carb2011 %>% 
+#   dplyr::mutate(fit_ipd = model1$coefficients[1] + model1$coefficients[2]*log_prevcarr + model1$coefficients[3]*log_inv)
+# 
+# #visualize relationship between predicted and observed IPD
+# spearmanCI <- function(x, y, alpha = 0.05){ #function for spearman rank correlation coefficient 95%CIs
+#   rs <- cor(x, y, method = "spearman", use = "complete.obs")
+#   n <- sum(complete.cases(x, y))
+#   round(sort(tanh(atanh(rs) + c(-1,1)*sqrt((1+rs^2/2)/(n-3))*qnorm(p = alpha/2))), digits = 2)
+# }
+# 
+#   data_Bogota0 %>%
+#   dplyr::filter(!is.na(fit_ipd)) %>%
+#   mutate(spcoef = round(cor(fit_ipd, nipd,  method = "spearman"), digits = 2)) %>%
+#   
+#   ggplot(aes(x = fit_ipd, y = log(nipd), color = st)) +
+#   geom_point(size = 2.5, shape = 1, stroke = 2) +
+#   geom_text(aes(label = st), size = 3, angle = 45, fontface = "bold", vjust = 2, hjust = 0.5) +
+#   geom_text(aes(x = 3, y = 6, label = paste0("Spearman, p = ", spcoef, ", \n[95%CI = ", spearmanCI(fit_ipd, nipd)[1], "-", spearmanCI(fit_ipd, nipd)[2], "]")), color = "black", size = 4) +
+#   expand_limits(x = c(-1,7), y = c(-1,7)) +
+#   theme_bw(base_size = 14, base_family = "American Typewriter") +
+#   labs(title = "(A)", x = "invasive disease (model estimate)", y = "log_invasive disease (observed)") + 
+#   theme(axis.text.y = element_text(face = "bold", size = 10)) + 
+#   theme(legend.text = element_text(size = 12), legend.position = "none", legend.title = element_text(size = 12)) +
+#   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))
 
-#calculate expected IPD incidence rate ratio (IRR)
-y = 0.68
-bind_cols(
-is_carb2009 %>% 
-  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", 
-                            if_else(is.na(st), NA_character_, "NVT"))) %>%
-  group_by(pcv13pfz) %>%
-  tally() %>%
-  mutate(p = n/sum(n)) %>%
-  dplyr::select(everything(), -n) %>%
-  pivot_wider(names_from = pcv13pfz, values_from = p) %>%
-  ungroup() %>%
-  mutate(c = PCV13/NVT) %>%
-  rename("cNVT" = "NVT",  "cPCV13"= "PCV13"),
-  
-is_ipdb2009 %>%
-  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
-  group_by(pcv13pfz) %>%
-  tally() %>%
-  ungroup() %>%
-  pivot_wider(names_from = pcv13pfz, values_from = n) %>%
-  ungroup() %>%
-  mutate(d = PCV13/NVT)) %>%
-  mutate(irr = (y*c+1)/(d+1))
+#====================================================================
+
 
 #====================================================================
 

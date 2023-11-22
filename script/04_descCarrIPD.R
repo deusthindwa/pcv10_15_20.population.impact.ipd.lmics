@@ -34,7 +34,7 @@ A <-
 
 #Israel
 B <-
-  bind_rows(is_ipdb2009, is_ipda2013) %>%
+  is_ipd %>%
   group_by(country, yearc, st) %>%
   tally() %>%
   mutate(N = sum(n)) %>%
@@ -56,7 +56,8 @@ B <-
 
 #South Africa
 C <-
-  bind_rows(sa_ipdb2009, sa_ipda2015) %>%
+  #bind_rows(sa_ipdb2009, sa_ipda2015) %>%
+  sa_ipd %>%
   group_by(country, yearc, st) %>%
   tally() %>%
   mutate(N = sum(n)) %>%
@@ -78,7 +79,7 @@ C <-
 #save combined plots
 ggsave(here("output", "sfig1_ipdstDist.png"),
        plot = ((A/B) | C), 
-       width = 18, height = 18, unit = "in", dpi = 300)
+       width = 18, height = 20, unit = "in", dpi = 300)
 
 #====================================================================
 #IPD VACCINE SEROTYPE-GROUP DISTRIBUTION PLOT
@@ -91,10 +92,8 @@ sg_ipd <-
 bind_rows(
   mw_ipdb2011 %>% dplyr::select(yearc, st, country), 
   mw_ipda2015 %>% dplyr::select(yearc, st, country),
-  is_ipdb2009 %>% dplyr::select(yearc, st, country),
-  is_ipda2013 %>% dplyr::select(yearc, st, country),
-  sa_ipdb2009 %>% dplyr::select(yearc, st, country),
-  sa_ipda2015 %>% dplyr::select(yearc, st, country)) %>%
+  is_ipd %>% dplyr::select(yearc, st, country),
+  sa_ipd %>% dplyr::select(yearc, st, country)) %>%
   dplyr::mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", "NVT"),
                 pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV15", "NVT"),
                 pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT"),
@@ -150,7 +149,8 @@ bind_rows(
   dplyr::filter(sg != "NVT") %>%
   
   ggplot() +
-  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0))), size = 1.5) +
+  geom_point(aes(x = yearc, y = p, group = sg), size = 1.5, position = position_dodge(width = 1.5), stroke = 2, shape = 1) +
+  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0)), group = sg), size = 1.5, position = position_dodge(width = 1.5)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_color_manual(values = paly) +
   scale_x_continuous(breaks = c(2005, 2009, 2013, 2017), limits = c(2005, 2019)) +
@@ -171,7 +171,7 @@ ggsave(here("output", "sfig2_ipdsgDist.png"),
 #====================================================================
 
 e <-
-  bind_rows(mw_cara2015) %>%
+  mw_cara2015 %>%
   mutate(st = if_else(st == "None", NA_character_, st)) %>%
   group_by(country, yearc, st) %>%
   tally() %>%
@@ -191,7 +191,7 @@ e <-
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 E <-
-  bind_rows(mw_cara2015) %>%
+  mw_cara2015 %>%
   mutate(st = if_else(st == "None", NA_character_, st)) %>%
   group_by(country, yearc, st) %>%
   tally() %>%
@@ -212,7 +212,7 @@ E <-
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 F <-
-  bind_rows(is_carb2009, is_cara2013) %>%
+  is_car %>%
   group_by(country, yearc, st) %>%
   tally() %>%
   mutate(N = sum(n)) %>%
@@ -237,7 +237,7 @@ F <-
 #save combined plots
 ggsave(here("output", "sfig3_carstDist.png"),
        plot = (E | inset_element(e, right = 0.98, left = 0.3, bottom = 0.6, top = 0.8) | F), 
-       width = 18, height = 11, unit = "in", dpi = 300)
+       width = 18, height = 13, unit = "in", dpi = 300)
 
 #====================================================================
 #CARRIAGE VACCINE SEROTYPE-GROUP DISTRIBUTION PLOT
@@ -249,8 +249,7 @@ paly = c("PCV7" = "#C04AE1", "PCV10-gsk" = "#D598D9", "PCV10-sii" = "#D16A5F", "
 sg_car <-
   bind_rows(
     mw_cara2015 %>% dplyr::select(yearc, st, country), 
-    is_carb2009 %>% dplyr::select(yearc, st, country),
-    is_cara2013 %>% dplyr::select(yearc, st, country)) %>%
+    is_car %>% dplyr::select(yearc, st, country)) %>%
   mutate(st = if_else(st == "None", NA_character_, st)) %>%
   dplyr::mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", 
                                    if_else(is.na(st), NA_character_, "NVT")),
@@ -313,12 +312,12 @@ G <-
   dplyr::filter(sg != "NVT") %>%
   
   ggplot() +
-  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0))), size = 1.5) +
+  geom_point(aes(x = factor(yearc), y = p, group = sg), size = 1.5, position = position_dodge(width = 1.5), stroke = 2, shape = 1) +
+  geom_line(aes(x = factor(yearc), y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0)), group = sg), size = 1.5, position = position_dodge(width = 1.5)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_color_manual(values = paly) +
-  scale_x_continuous(breaks = c(2009, 2013, 2017), limits = c(2009, 2019)) +
   labs(title = "", x = "sampling year", y = "vaccine serotype carriage prevalence") + 
-  facet_wrap(.~country) +
+  facet_wrap(.~country, scales = "free_x") +
   scale_y_continuous(limit = c(0, 0.65), breaks = seq(0, 0.65, 0.15), labels = scales::percent_format(accuracy = 1)) + 
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(color = guide_legend(title = "")) +
@@ -334,11 +333,30 @@ ggsave(here("output", "sfig4_carsgDist.png"),
 #IPD AGE DISTRIBUTION
 #====================================================================
 
-mw_ipdb2011 %>%
-  mutate(era = "before PCV13 introduction")
+H <-
+bind_rows(
+  mw_ipdb2011 %>% mutate(era = "pre-PCV13"),
+  mw_ipda2015 %>% mutate(era = "post-PCV13"),
+  is_ipdb2009 %>% mutate(era = "pre-PCV13"),
+  is_ipda2013 %>% mutate(era = "post-PCV13"),
+  sa_ipdb2009 %>% mutate(era = "pre-PCV13"),
+  sa_ipda2015 %>% mutate(era = "post-PCV13")) %>%
+  
+  ggplot(aes(x = agey, color = era, fill = era)) +
+  geom_density(size = 1.5, alpha = 0.3) +
+  theme_bw(base_size = 16, base_family = "Lato") +
+  labs(title = "", x = "age (years)", y = "density of IPD isolates") + 
+  facet_wrap(.~country, scales = "free_x") +
+  scale_x_continuous(limit = c(1, 5), breaks = seq(1, 5, 1)) + 
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  guides(fill = guide_legend(title = "", label = FALSE), color = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
-mw_ipdb2011 %>%
-  mutate(era = "after PCV13 introduction")
+#save combined plots
+ggsave(here("output", "sfig5_ipdAgeDist.png"),
+       plot = (H), 
+       width = 10, height = 7, unit = "in", dpi = 300)
 
 
 

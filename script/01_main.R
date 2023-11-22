@@ -30,23 +30,20 @@ addTaskCallback(function(...) {set.seed(1988); TRUE})
 
 #====================================================================
 
-#load datasets for pneumococcal carriage and IPD during PCV13 era
+#load datasets for pneumococcal carriage and IPD for different countries
 source("script/02_manageData.R")
 
-#load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/03_descCarrIPD.R")
+#fit pre-PCV IPD (+ invasiveness) in Malawi and South Africa to infer pre-PCV carriage
+source("script/03_carriageInfer.R")
+
+#describe pneumococcal serotype carriage and IPD isolates
+source("script/04_descCarrIPD.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/04_estInvasiveness.R")
+source("script/05_predModels.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/05_preCarrInvasiveModel.R")
+source("script/06_evalModels.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/06_cfrInvasiveModel.R")
-
-#load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/07_evalModels.R")
-
-#load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/08_vaccineImpact.R")
+source("script/087_vaccineImpact.R")

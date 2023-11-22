@@ -91,7 +91,7 @@ mw_cara2015 <-
 #serotyping done using....
 
 #import pre- and post-PCV7 pediatric invasive disease data
-is_ipdb2009 <- is_ipda2013 <-
+is_ipd <- is_ipdb2009 <- is_ipda2013 <-
   rio::import(here("data", "israel_ipd_2009-16.csv")) %>%
   dplyr::select(Obtaining_Year, Obtaining_Month, Ethnicity, Pnc_Serotype, agem2) %>%
   dplyr::mutate(datec = lubridate::make_date(year = Obtaining_Year, month = Obtaining_Month, day = "01")) %>%
@@ -106,18 +106,23 @@ is_ipdb2009 <- is_ipda2013 <-
                 country = "Israel") %>%
   dplyr::select(datec, yearc, agey, st, eth, country)
 
-#filter only pre-PCV7 pediatric invasive disease data
+#total invasive disease data irrespective of sampling year
+is_ipd <- 
+  is_ipd %>% 
+  dplyr::filter(st != "ND", st != "OMNI NEG")
+
+#filter to have pre-PCV7 pediatric invasive disease data
 is_ipdb2009 <- 
   is_ipdb2009 %>% 
   dplyr::filter(yearc == 2009, st != "ND", st != "OMNI NEG")
 
-#filter only post-PCV7 pediatric invasive disease data in a mature program
+#filter to have post-PCV7 pediatric invasive disease data in a mature program
 is_ipda2013 <- 
   is_ipda2013 %>%
   dplyr::filter(yearc >= 2013, st != "ND", st != "OMNI NEG")
 
 #import pre- and post-PCV13 pediatric carriage data
-is_carb2009 <- is_cara2013 <-
+is_car <- is_carb2009 <- is_cara2013 <-
   rio::import(here("data", "israel_carriage_2009-16.csv")) %>%
   dplyr::select(swab_year, swab_month, Ethnicity, Pnc_Serotype, agem2) %>%
   dplyr::mutate(datec = lubridate::make_date(year = swab_year, month = swab_month, day = "01")) %>%
@@ -130,6 +135,12 @@ is_carb2009 <- is_cara2013 <-
                 st = as.factor(st),
                 eth = as.factor(eth)) %>%
   dplyr::select(datec, yearc, agey, st, eth)
+
+#total pediatric carriage data irrespective of year
+is_car <- 
+  is_car %>% 
+  dplyr::mutate(st = as.factor(if_else(st == "OMNI NEG", NA_character_, st)),
+                country = "Israel")
 
 #filter only pre-PCV7 pediatric carriage data
 is_carb2009 <- 
@@ -154,7 +165,7 @@ is_cara2013 <-
 #serotyping done using...
 
 #import pre- and post-PCV7 pediatric invasive disease data
-sa_ipdb2009 <- sa_ipda2015 <-
+sa_ipd <- sa_ipdb2009 <- sa_ipda2015 <-
   rio::import(here("data", "southafrica_ipd_2005-19_viable.csv")) %>%
   dplyr::rename("yearc" = "YEAR",
                 "st" = "SEROTYPE",
@@ -196,61 +207,6 @@ sa_ipda2015 <-
 #====================================================================
 
 #notes
-#PCV7 introduced in March 2010 under 3+0 dosing schedule
+#PCV10 introduced in March 2010 under 3+0 dosing schedule
 
-
-
-
-
-#create vaccine serotypes (PCV7, PCV10-GSK, PCV10-SII, PCV13, PCV15, PCV20)
-
-
-
-
-
-
-#====================================================================
-#INVASIVENESS DATA MANIPULATION
-#====================================================================
-
-#import invasiveness data from Navajo et al. and store it in computer hard drive
-#data_inv <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
-#data_inv %>% readr::write_csv(x = ., file = here("data", "data_inv.csv"))
-data_inv <-
-  rio::import(here("data", "data_inv.csv")) %>%
-  dplyr::select(everything(), -V1, -log.inv.prec.age1) %>%
-  dplyr::rename("log_inv" = "log.inv.age1")
-
-#import carriage and ipd datasets
-#data_all <- rio::import("https://raw.githubusercontent.com/nickjcroucher/progressionEstimation/main/data-raw/S_pneumoniae_infant_serotype.csv")
-#data_all %>% readr::write_csv(x = ., file = here("data", "data_all.csv"))
-data_all <- 
-  rio::import(here("data", "data_all.csv")) %>%
-  dplyr::mutate(country = word(study, 1, sep = "\\."),
-                phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv", "post-pcv")) %>%
-  dplyr::select(country, phase, time_interval, type, carriage_samples, carriage, surveillance_population, disease) %>%
-  dplyr::rename("period" = "time_interval", 
-                "st" = "type",  
-                "nsamples"= "carriage_samples", 
-                "ncarr" = "carriage",  
-                "npop" = "surveillance_population", 
-                "nipd" = "disease") %>%
-  dplyr::mutate(prevcarr = ncarr/nsamples,
-                log_prevcarr = log(prevcarr+0.5),
-                log_npop = log(npop)) %>%
-  #dplyr::filter(phase == "pre-pcv") %>%
-  dplyr::select(country:ncarr, prevcarr, log_prevcarr, log_npop, nipd)
-
-
-#case when code
-dplyr::mutate(seas = case_when(st %in% c("6A", "6B", "6A/6B") ~ "6A/6B",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               st %in% c("11A", "11D", "11A/D") ~ "11A/D",
-                               TRUE ~ NA_character_)) 
 
