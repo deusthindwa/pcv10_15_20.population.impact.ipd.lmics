@@ -7,12 +7,12 @@
 #====================================================================
 
 # #import invasiveness data from Navajo et al. and store it in computer hard drive
-# #data_inv <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
-# #data_inv %>% readr::write_csv(x = ., file = here("data", "data_inv.csv"))
-# data_inv <-
-#   rio::import(here("data", "invasiveness_global.csv")) %>%
-#   dplyr::select(everything(), -V1, -log.inv.prec.age1) %>%
-#   dplyr::rename("log_inv" = "log.inv.age1")
+#data_inv <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
+#data_inv %>% readr::write_csv(x = ., file = here("data", "data_inv.csv"))
+data_inv <-
+  rio::import(here("data", "invasiveness_global.csv")) %>%
+  dplyr::select(everything(), -V1, -log.inv.prec.age1) %>%
+  dplyr::rename("log_inv" = "log.inv.age1")
 # 
 # #import carriage and ipd datasets
 # #data_all <- rio::import("https://raw.githubusercontent.com/nickjcroucher/progressionEstimation/main/data-raw/S_pneumoniae_infant_serotype.csv")

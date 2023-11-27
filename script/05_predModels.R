@@ -27,6 +27,8 @@
 #IRR = D'/D = [(Cnvt + y * Cvt) * Qnvt]/[Cvt * Qvt + Cnvt * Qnvt], divide by Cnvt, then Qnvt to get below equation
 #IRR = [y*c+1]/[d+1], where c = Cvt/Cnvt, d = Dvt/Dnvt
 
+#====================================================================
+
 #Israel
 #calculate observed IPD incidence rate ratio (IRR)
 bind_cols(
@@ -39,7 +41,7 @@ bind_cols(
     mutate(fup1 = 1,
            N1 = 7500000,
            incid1 = n1/(N1*fup1)),
-  
+
   is_ipda2013 %>%
     mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
     group_by(pcv13pfz) %>%
@@ -49,8 +51,7 @@ bind_cols(
     mutate(fup2 = 4,
            N2 = 9000000,
            incid2 = n2/(N2*fup2)) %>%
-    dplyr::select(everything(), -pcv13pfz)
-) %>%
+    dplyr::select(everything(), -pcv13pfz)) %>%
   mutate(irr = incid2/incid1)
 
 #calculate expected IPD incidence rate ratio (IRR)
@@ -67,7 +68,7 @@ bind_cols(
     ungroup() %>%
     mutate(c = PCV13/NVT) %>%
     rename("cNVT" = "NVT",  "cPCV13"= "PCV13"),
-  
+
   is_ipdb2009 %>%
     mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
     group_by(pcv13pfz) %>%
@@ -77,6 +78,75 @@ bind_cols(
     ungroup() %>%
     mutate(d = PCV13/NVT)) %>%
   mutate(irr = (y*c+1)/(d+1))
+
+#====================================================================
+
+#estimate invasiveness of NVT (non-PCV13)
+data_inv %>%
+  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", 
+                            if_else(st == "NT", NA_character_, "NVT"))) %>%
+  group_by(pcv13pfz) %>%
+  summarise(inv = mean(log_inv)) %>%
+  ungroup()
+
+#expected IPD rates post-PCV introduction for VT and NVT
+is_ipda2013 %>%
+  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
+  group_by(pcv13pfz) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("n2" = "n") %>%
+  mutate(fup2 = 4,
+         N2 = 9000000,
+         incid2 = n2/(fup2)) %>%
+  dplyr::select(everything(), -pcv13pfz)
+
+#serotype carriage data before PCV introduction
+is_carb2009 %>% 
+  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", 
+                            if_else(is.na(st), NA_character_, "NVT"))) %>%
+  group_by(pcv13pfz) %>%
+  tally() %>%
+  mutate(p = n/sum(n)) %>%
+  dplyr::select(everything(), -n) %>%
+  pivot_wider(names_from = pcv13pfz, values_from = p) %>%
+  ungroup() %>%
+  mutate(c = PCV13/NVT) %>%
+  rename("cNVT" = "NVT",  "cPCV13"= "PCV13")
+
+#estimate post-IPD rates using serotype carriage data pre-PCV
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
