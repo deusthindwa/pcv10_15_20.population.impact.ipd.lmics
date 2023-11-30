@@ -31,7 +31,7 @@
 #====================================================================
 
 #define constants and scenarios
-fuy1 = 1; popn1 = 7500000 #2009 follow up time and population size
+fuy1 = 0.5; popn1 = 7500000 #2009 follow up time and population size
 fuy2 = 4; popn2 = 9000000 #2013+ follow up time and population size
 bs_samples = 10000 #bootstrap sampling
 
@@ -211,17 +211,17 @@ pcv_samples <-
          country = "Israel")
 
 #summary preventable disease estimates
-pcv_samples %>%
+pcv_samples %>% 
   group_by(pcv) %>%
-  summarise(irr1M = quantile(irr1, 0.500),
-            irr1L = quantile(irr1, 0.025),
-            irr1U = quantile(irr1, 0.975),
-            irr2M = quantile(irr1, 0.500),
-            irr2L = quantile(irr1, 0.025),
-            irr2U = quantile(irr1, 0.975),
-            irr3M = quantile(irr1, 0.500),
-            irr3L = quantile(irr1, 0.025),
-            irr3U = quantile(irr1, 0.975))
+  summarise(irr1M = 1-quantile(irr1, 0.500),#flip the 95%CI koz of subtracting from 1
+            irr1L = 1-quantile(irr1, 0.975),
+            irr1U = 1-quantile(irr1, 0.025),
+            irr2M = 1-quantile(irr2, 0.500),
+            irr2L = 1-quantile(irr2, 0.975),
+            irr2U = 1-quantile(irr2, 0.025),
+            irr3M = 1-quantile(irr3, 0.500),
+            irr3L = 1-quantile(irr3, 0.975),
+            irr3U = 1-quantile(irr3, 0.025))
 
 #plot preventable disease distributions
 C <-
@@ -231,14 +231,17 @@ pcv_samples %>%
   geom_density(aes(x = 1-irr2, group = pcv, fill = "estimated SR"), size = 0.6, alpha = 0.4) +
   geom_density(aes(x = 1-irr3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.4) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   facet_grid(country~pcv, scales = "free_y") +
   scale_fill_manual(name = "scenarios of serotype\nreplacement (SR)", values = c("no SR" = "blue", "estimated SR" = "red", "complete SR" = "green")) +
-  labs(title = "", x = "proportion of preventable VT disease", y = "density") + 
-  scale_x_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.2)) + 
-  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
+  labs(title = "", x = "proportion of preventable IPD", y = "density") + 
+  scale_x_continuous(limit = c(-1, 1), breaks = seq(-1, 1, 0.2)) + 
+  theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14), legend.key.size = unit(1.2,"cm")) +
+  theme(strip.text.x = element_text(size = 26), strip.text.y = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #save combined plots
 ggsave(here("output", "sfig7_vaximpact.png"),
        plot = (C), 
-       width = 18, height = 6, unit = "in", dpi = 300)
+       width = 22, height = 7, unit = "in", dpi = 300)
+
