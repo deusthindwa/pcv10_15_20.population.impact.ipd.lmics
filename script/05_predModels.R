@@ -28,272 +28,209 @@
 #IRR = [y*c+1]/[d+1], where c = Cvt/Cnvt, d = Dvt/Dnvt
 
 #====================================================================
+#====================================================================
 
-#Israel pcv13 impact
-#calculate observed IPD incidence rate ratio (IRR)
-bind_cols(
-  is_ipdb2009 %>%
-    mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
-    group_by(pcv13pfz) %>%
-    tally() %>%
-    ungroup() %>%
-    rename("n1" = "n") %>%
-    mutate(fup1 = 1,
-           N1 = 7500000,
-           incid1 = n1/(N1*fup1)),
-  
-  is_ipda2013 %>%
-    mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
-    group_by(pcv13pfz) %>%
-    tally() %>%
-    ungroup() %>%
-    rename("n2" = "n") %>%
-    mutate(fup2 = 4,
-           N2 = 9000000,
-           incid2 = n2/(N2*fup2)) %>%
-    dplyr::select(everything(), -pcv13pfz)) %>%
-  
-  mutate(irr = incid2/incid1)
+#define constants and scenarios
+fuy1 = 1; popn1 = 7500000 #2009 follow up time and population size
+fuy2 = 4; popn2 = 9000000 #2013+ follow up time and population size
+bs_samples = 10000 #bootstrap sampling
 
-#calculate expected IPD incidence rate ratio (IRR)
-bind_cols(
-  is_carb2009 %>% 
-    mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", 
-                              if_else(is.na(st), NA_character_, "NVT"))) %>%
-    group_by(pcv13pfz) %>%
-    tally() %>%
-    mutate(p = n/sum(n)) %>%
-    dplyr::select(everything(), -n) %>%
-    pivot_wider(names_from = pcv13pfz, values_from = p) %>%
-    ungroup() %>%
-    mutate(c = PCV13/NVT) %>%
-    rename("cNVT" = "NVT",  "cPCV13"= "PCV13"),
-  
+#observed IPD incidence rate ratio for PCV13 serotypes (postPCV13 vs prePCV13)
+x1 <-
   is_ipdb2009 %>%
-    mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT")) %>%
+    mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "dVT1", "dNVT1")) %>%
     group_by(pcv13pfz) %>%
     tally() %>%
-    ungroup() %>%
     pivot_wider(names_from = pcv13pfz, values_from = n) %>%
     ungroup() %>%
-    mutate(d = PCV13/NVT)) %>%
-  
-  mutate(irr1 = (0*c+1)/(d+1),
-         irr2 = (0.679*c+1)/(d+1),
-         irr3 = (1*c+1)/(d+1))
-
-#====================================================================
-
-#Israel pcv10sii impact
-#calculate expected IPD incidence rate ratio (IRR)
-  bind_cols(
-    is_cara2013 %>% 
-      mutate(pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "PCV10sii", 
-                                if_else(is.na(st), NA_character_, "NVT"))) %>%
-      group_by(pcv10sii) %>%
-      tally() %>%
-      mutate(p = n/sum(n)) %>%
-      dplyr::select(everything(), -n) %>%
-      pivot_wider(names_from = pcv10sii, values_from = p) %>%
-      ungroup() %>%
-      mutate(c = PCV10sii/NVT) %>%
-      rename("cNVT" = "NVT",  "cPCV10sii"= "PCV10sii"),
+    mutate(dTot1 = sum(dNVT1, dVT1))
     
-    is_ipda2013 %>%
-      mutate(pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "PCV10sii", "NVT")) %>%
-      group_by(pcv10sii) %>%
-      tally() %>%
-      ungroup() %>%
-      pivot_wider(names_from = pcv10sii, values_from = n) %>%
-      ungroup() %>%
-      mutate(d = PCV10sii/NVT)) %>%
-  
-  mutate(irr1 = (0*c+1)/(d+1),
-         irr2 = (0.679*c+1)/(d+1),
-         irr3 = (1*c+1)/(d+1))
+x2 <-
+  is_ipda2013 %>%
+  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "dVT2", "dNVT2")) %>%
+  group_by(pcv13pfz) %>%
+  tally() %>%
+  pivot_wider(names_from = pcv13pfz, values_from = n) %>%
+  ungroup() %>%
+  mutate(dTot2 = sum(dNVT2, dVT2))
 
-#====================================================================
-
-#Israel pcv10gsk impact
-#calculate expected IPD incidence rate ratio (IRR)
-  bind_cols(
-    is_cara2013 %>% 
-      mutate(pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "PCV10gsk", 
-                                if_else(is.na(st), NA_character_, "NVT"))) %>%
-      group_by(pcv10gsk) %>%
-      tally() %>%
-      mutate(p = n/sum(n)) %>%
-      dplyr::select(everything(), -n) %>%
-      pivot_wider(names_from = pcv10gsk, values_from = p) %>%
-      ungroup() %>%
-      mutate(c = PCV10gsk/NVT) %>%
-      rename("cNVT" = "NVT",  "cPCV10gsk"= "PCV10gsk"),
-    
-    is_ipda2013 %>%
-      mutate(pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "PCV10gsk", "NVT")) %>%
-      group_by(pcv10gsk) %>%
-      tally() %>%
-      ungroup() %>%
-      pivot_wider(names_from = pcv10gsk, values_from = n) %>%
-      ungroup() %>%
-      mutate(d = PCV10gsk/NVT)) %>%
-  
-  mutate(irr1 = (0*c+1)/(d+1),
-         irr2 = (0.679*c+1)/(d+1),
-         irr3 = (1*c+1)/(d+1))
-
-#====================================================================
-
-#Israel pcv15 impact
-#calculate expected IPD incidence rate ratio (IRR)
-  bind_cols(
-    is_cara2013 %>% 
-      mutate(pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV15", 
-                                if_else(is.na(st), NA_character_, "NVT"))) %>%
-      group_by(pcv15mek) %>%
-      tally() %>%
-      mutate(p = n/sum(n)) %>%
-      dplyr::select(everything(), -n) %>%
-      pivot_wider(names_from = pcv15mek, values_from = p) %>%
-      ungroup() %>%
-      mutate(c = PCV15/NVT) %>%
-      rename("cNVT" = "NVT",  "cPCV15"= "PCV15"),
-    
-    is_ipda2013 %>%
-      mutate(pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV15", "NVT")) %>%
-      group_by(pcv15mek) %>%
-      tally() %>%
-      ungroup() %>%
-      pivot_wider(names_from = pcv15mek, values_from = n) %>%
-      ungroup() %>%
-      mutate(d = PCV15/NVT)) %>%
-  
-  mutate(irr1 = (0*c+1)/(d+1),
-         irr2 = (0.679*c+1)/(d+1),
-         irr3 = (1*c+1)/(d+1))
-
-#====================================================================
-
-#Israel pcv20 impact
-#calculate expected IPD incidence rate ratio (IRR)
-  bind_cols(
-    is_cara2013 %>% 
-      mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", 
-                                if_else(is.na(st), NA_character_, "NVT"))) %>%
-      group_by(pcv20pfz) %>%
-      tally() %>%
-      mutate(p = n/sum(n)) %>%
-      dplyr::select(everything(), -n) %>%
-      pivot_wider(names_from = pcv20pfz, values_from = p) %>%
-      ungroup() %>%
-      mutate(c = PCV20/NVT) %>%
-      rename("cNVT" = "NVT",  "cPCV20"= "PCV20"),
-    
-    is_ipda2013 %>%
-      mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", "NVT")) %>%
-      group_by(pcv20pfz) %>%
-      tally() %>%
-      ungroup() %>%
-      pivot_wider(names_from = pcv20pfz, values_from = n) %>%
-      ungroup() %>%
-      mutate(d = PCV20/NVT)) %>%
-  
-  mutate(irr1 = (0*c+1)/(d+1),
-         irr2 = (0.679*c+1)/(d+1),
-         irr3 = (1*c+1)/(d+1))
-
-#====================================================================
-#====================================================================
-fuy = 4
-is_pcv10sii <-
+x <-
 bind_cols(
-is_cara2013 %>% 
-  mutate(pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT"))) %>%
-  group_by(pcv10sii) %>%
+  tibble(dVT1 = replicate(bs_samples, mean(rbinom(n = x1$dVT1, p = x1$dVT1/x1$dTot1, size = 1)*x1$dTot1)), dTot1 = x1$dTot1),
+  tibble(dVT2 = replicate(bs_samples, mean(rbinom(n = x2$dVT2, p = x2$dVT2/x2$dTot2, size = 1)*x2$dTot2)), dTot2 = x2$dTot2)) %>%
+  mutate(incidVT1 = dVT1/(popn1*fuy1), incidVT2 = dVT2/(popn2*fuy2), irr0 = incidVT2/incidVT1)
+
+#model-based IPD incidence rate ratio (using only prePCV13 carriage and IPD data)
+y1 <-
+  is_carb2009 %>% 
+    mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT"))) %>%
+    group_by(pcv13pfz) %>%
+    tally() %>%
+    pivot_wider(names_from = pcv13pfz, values_from = n) %>%
+    ungroup() %>%
+    mutate(cTot = sum(cNVT, cVT, None),
+           None = 1000*None, #scale up numbers by 1000 to ensure carriage prevalence simulation >0
+           cNVT = 1000*cNVT,
+           cVT = 1000*cVT,
+           cTot = 1000*cTot)
+
+y2 <-
+  is_ipdb2009 %>%
+  mutate(pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "dVT", "dNVT")) %>%
+  group_by(pcv13pfz) %>%
   tally() %>%
-  pivot_wider(names_from = pcv10sii, values_from = n) %>%
+  pivot_wider(names_from = pcv13pfz, values_from = n) %>%
   ungroup() %>%
-  mutate(cNVT = cNVT/fuy, cVT = cVT/fuy, None = None/fuy, cTot = sum(None, cVT, cNVT)), #annualise carriage prevalence
+  mutate(dTot = sum(dNVT, dVT),
+         dNVT = 1000*dNVT, #scale up numbers by 1000 to ensure disease prevalence simulation >0
+         dVT = 1000*dVT,
+         dTot = 1000*dTot)
 
-is_ipda2013 %>%
-  mutate(pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "dVT", "dNVT")) %>%
-  group_by(pcv10sii) %>%
-  tally() %>%
-  pivot_wider(names_from = pcv10sii, values_from = n) %>%
-  ungroup() %>%
-  mutate(dNVT = dNVT/fuy, dVT = dVT/fuy, dTot = sum(dVT, dNVT)) #annualise disease cases
-)
+y <-
+  bind_cols(
+    tibble(cVT = replicate(bs_samples, mean(rbinom(n = y1$cVT, p = y1$cVT/y1$cTot, size = 1))),
+           cNVT = replicate(bs_samples, mean(rbinom(n = y1$cNVT, p = y1$cNVT/y1$cTot, size = 1)))),
+    tibble(dVT = replicate(bs_samples, mean(rbinom(n = y2$dVT, p = y2$dVT/y2$dTot, size = 1))), 
+           dNVT = replicate(bs_samples, mean(rbinom(n = y2$dNVT, p = y2$dNVT/y2$dTot, size = 1))))) %>%
+  mutate(cNVT = if_else(cNVT == 0, 0.05, if_else(cNVT == 1, 0.999, cNVT)),
+         dNVT = if_else(dNVT == 0, 0.05*y2$dTot, if_else(dNVT == 1, 0.999*y2$dTot, dNVT)))
 
-#set the mean carriage prevalence and disease incidence
-cVT_mean = is_pcv10sii$cVT/(is_pcv10sii$cTot)
-cNVT_mean = is_pcv10sii$cNVT/(is_pcv10sii$cTot)
-#c = cVT_mean/cNVT_mean
-dVT_mean = is_pcv10sii$dVT
-dNVT_mean = is_pcv10sii$dNVT
-dTot = is_pcv10sii$dTot
-#d = dVT_mean/dNVT_mean
+#explore the optimal serotype replacement parameter value over a 3 digit decimal place grid
+j = 1
+sr = seq(0, 1, by = 0.001) 
+err_DS <- tibble(sr = sr, err_diff = rep(NA, 1001))
+for (i in sr) {
+  err_DS$err_diff[j] = abs(median(x$irr0) - median((i*(y$cVT/y$cNVT)+1)/((y$dVT/y$dNVT)+1)))
+  j = j+1
+}
+err_DS <- err_DS %>% mutate(sr_min = sr[which.min(err_diff)],
+                            country = "Israel")
 
-#serotype replacement status
-y1 = 0     #no replacement 
-y2 = 0.679 #estimated/baseline replacement
-y3 = 1     #complete replacement 
-
-#bootstrap sampling
-bs_samples = 1000
-
-simul_ps <-  
-  tibble(cVT = replicate(bs_samples, mean(rbinom(sum(is_pcv10sii[,3]), p = cVT_mean, size = 1))),
-         cNVT = replicate(bs_samples, mean(rbinom(sum(is_pcv10sii[,2]), p = cNVT_mean, size = 1))),
-         dVT = replicate(bs_samples, mean(rbinom(sum(is_pcv10sii[,6]), p = dVT_mean/(dTot), size = 1)*dTot)),
-         dNVT = replicate(bs_samples, mean(rbinom(sum(is_pcv10sii[,5]), p = dNVT_mean/(dTot), size = 1)*dTot))) %>%
-  mutate(irr1 = round((y1*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
-         irr2 = round((y2*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
-         irr3 = round((y3*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4))
-
-simul_ps %>%
-ggplot(aes(x = cVT, y = dVT/dTot, fill = irr1)) +
-  geom_tile()
+A <-
+err_DS %>%
+  ggplot() +
+  geom_line(aes(x = sr, y = err_diff), size = 1) +
+  geom_point(aes(x = sr[which.min(err_diff)], y = min(err_diff)), size = 2, stroke = 1, shape = 4, color = "black") +
+  geom_text(aes(x = sr[which.min(err_diff)], y = min(err_diff), label = sr_min), size = 4, angle = "0", vjust = 0.5, hjust = 1.4, fontface = "bold") +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "", x = "proportion of NVT replacing VT carriage", y = "predicted vs observed median IRR error") + 
+  facet_grid(.~country, scales = "free_y") +
+  scale_x_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.25)) + 
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 
-#bootstrap sampling
-for(b in 1:bs_samples){
-  
-  #carriage
-  cVT = dVT*0+(rbinom(n = length(cN_pos), size = cN_pos, prob = cVT_mean)/cN_pos)
-  for(c in names(cVT_posterior)){
-    cVT[c] = sample(cVT_posterior[,c],1)
+#calculate the incidence rate ratio based on the model
+y <-
+  y %>% mutate(irr1 = (0*(cVT/cNVT)+1)/((dVT/dNVT)+1), 
+               irr2 = (err_DS$sr_min[1]*(cVT/cNVT)+1)/((dVT/dNVT)+1), 
+               irr3 = (sr3*(cVT/cNVT)+1)/((dVT/dNVT)+1))
+
+B <-
+bind_rows(
+x %>% dplyr::select(irr0) %>% mutate(sr = "observed IRR", country = "Israel") %>% rename("irr" = "irr0"),
+y %>% dplyr::select(irr1) %>% mutate(sr = "predicted IRR, no SR", country = "Israel") %>% rename("irr" = "irr1"),
+y %>% dplyr::select(irr2) %>% mutate(sr = "predicted IRR, estimated SR", country = "Israel", country = "Israel") %>% rename("irr" = "irr2"),
+y %>% dplyr::select(irr3) %>% mutate(sr = "predicted IRR, complete SR", country = "Israel") %>% rename("irr" = "irr3")) %>%
+
+ggplot() +
+  geom_density_ridges(aes(x = log(irr), y = sr, fill = sr), size = 0.5, alpha = 0.5) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "", x = "log_incidence rate ratio", y = "Density") + 
+  facet_grid(.~country, scales = "free_y") +
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 0)) +
+  guides(fill = guide_legend(title = "Model validation and scenarios\nof serotype replacement (SR)")) +
+  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "sfig6_obsvspred.png"),
+       plot = (A | B), 
+       width = 16, height = 9, unit = "in", dpi = 300)
+
+#====================================================================
+#====================================================================
+
+#compute expected pcv impact with a prediction model
+pcv_carr <-
+  bind_cols(
+    is_cara2013 %>% 
+      mutate(pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT")),
+             pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT")),
+             pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT")),
+             pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT"))) %>%
+      pivot_longer(names_to = "pcv", cols = c(pcv10sii, pcv10gsk, pcv15mek, pcv20pfz)) %>%
+      group_by(pcv, value) %>%
+      tally() %>%
+      pivot_wider(names_from = value, values_from = n) %>%
+      ungroup() %>%
+      mutate(cNVT = cNVT/fuy2, cVT = cVT/fuy2, None = None/fuy2, cTot = sum(None, cVT, cNVT)/fuy2) %>% #annualise disease cases
+      mutate(pcNVT = cNVT/cTot, pcVT = cVT/cTot), 
+    
+    is_ipda2013 %>%
+      mutate(pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "dVT", "dNVT"),
+             pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "dVT", "dNVT"),
+             pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "dVT", "dNVT"),
+             pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "dVT", "dNVT")) %>%
+      pivot_longer(names_to = "pcv", cols = c(pcv10sii, pcv10gsk, pcv15mek, pcv20pfz)) %>%
+      ungroup() %>%
+      group_by(pcv, value) %>%
+      tally() %>%
+      pivot_wider(names_from = value, values_from = n) %>%
+      ungroup() %>%
+      mutate(dNVT = dNVT/fuy2, dVT = dVT/fuy2, dTot = sum(dNVT, dVT)/fuy2) %>% #annualise carriage prevalence
+      mutate(pdNVT = dNVT/dTot, pdVT = dVT/dTot) %>%
+      dplyr::select(everything(), -pcv))
+
+#generate random samples around carriage and disease mean values
+pcv_samples <- tibble(pcv = c(rep("pcv10gsk", bs_samples), 
+                              rep("pcv10sii", bs_samples), 
+                              rep("pcv15mek", bs_samples), 
+                              rep("pcv20pfz", bs_samples)),
+                      cVT = NA, cNVT = NA, dVT = NA, dNVT = NA)
+k = 1
+l = bs_samples
+for (i in 1:4) {
+  for (j in k:l) {
+    pcv_samples$cVT[j] = mean(rbinom(sum(pcv_carr$cTot[i]), p = pcv_carr$pcVT[i], size = 1))
+    pcv_samples$cNVT[j] = mean(rbinom(sum(pcv_carr$cTot[i]), p = pcv_carr$pcNVT[i], size = 1))
+    pcv_samples$dVT[j] = mean(rbinom(sum(pcv_carr$dTot[i]), p = pcv_carr$pdVT[i], size = 1)*dTot)
+    pcv_samples$dNVT[j] = mean(rbinom(sum(pcv_carr$dTot[i]), p = pcv_carr$pdNVT[i], size = 1)*dTot)
   }
-  cVT[which(cVT ==0)] = 0.001
-  cVT[which(cVT ==1)] = 0.999
-  cNVT = 1-cVT
-  cVTNVT = cVT/cNVT
-  
-  cVT = dVT*0+(rbinom(n = length(cN_pos), size = cN_pos, prob = cVT_mean)/cN_pos)
-  for(c in names(cVT_posterior)){
-    cVT[c] = sample(cVT_posterior[,c],1)
-  }
-  cVT[which(cVT ==0)] = 0.001
-  cVT[which(cVT ==1)] = 0.999
-  cNVT = 1-cVT
-  cVTNVT = cVT/cNVT
-  
-  #disease
-  dVT_temp = dVT*0+(rbinom(n = length(dVT), size = dVT_sample, prob = dVT/100)/dVT_sample)
-  dVT_temp[which(dVT_temp==0)] = 0.001
-  dVT_temp[which(dVT_temp==1)] = 0.999
-  dNVT_temp = 1-dVT_temp
-  dVTNVT_temp = dVT_temp/dNVT_temp
-  
-  #make prediction
-  my_pred_vacc_eff_disease_boots[b,] = predicted_vacc_eff_Disease(cVTNVT, dVTNVT_temp, lambda)
-  noreplace_pred_vacc_eff_disease_boots[b,] = predicted_vacc_eff_Disease(cVTNVT, dVTNVT_temp, 0)				
+k = l + 1
+l = l + bs_samples
 }
 
-my_pred_IRR_disease = round(1-predicted_vacc_eff_Disease(cVTNVT_mean, dVTNVT, lambda), 2)
-my_pred_IRR_disease_low = round(apply(1-my_pred_vacc_eff_disease_boots, 2, quantile,probs = 0.025,na.rm = T), 2)
-my_pred_IRR_disease_high = round(apply(1-my_pred_vacc_eff_disease_boots, 2, quantile,probs = 0.975, na.rm = T), 2)
+pcv_samples <-
+  pcv_samples %>%
+  mutate(irr1 = round((0*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
+         irr2 = round((err_DS$sr_min[1]*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
+         irr3 = round((1*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4))
 
-noreplace_pred_IRR_disease = round(1-predicted_vacc_eff_Disease(cVTNVT_mean, dVTNVT, 0), 2)
-noreplace_pred_IRR_disease_low = round(apply(1-noreplace_pred_vacc_eff_disease_boots, 2, quantile, probs = 0.025, na.rm = T), 2)
-noreplace_pred_IRR_disease_high = round(apply(1-noreplace_pred_vacc_eff_disease_boots, 2, quantile,probs = 0.975, na.rm = T), 2)
+pcv_samples %>%
+  group_by(pcv) %>%
+  #dplyr::filter(pcv == "pcv10gsk") %>%
+  summarise(irr1M = quantile(irr1, 0.5),
+         irr1L = quantile(irr1, 0.025),
+         irr1U = quantile(irr1, 0.975),
+         irr2M = quantile(irr1, 0.5),
+         irr2L = quantile(irr1, 0.025),
+         irr2U = quantile(irr1, 0.975),
+         irr3M = quantile(irr1, 0.5),
+         irr3L = quantile(irr1, 0.025),
+         irr3U = quantile(irr1, 0.975)) %>%
+  
+  
+ggplot() +
+  geom_point(aes(pcv, 1-irr1M, color = pcv), size = 1, shape = 4, stroke = 2, position = position_dodge2(width = 0.5), stat = "identity") +
+  geom_errorbar(aes(pcv,  ymin = 1-irr1L, ymax = 1-irr1U, color = pcv), width = 0, size = 1, position = position_dodge2(width = 0.5)) +
+  
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  #scale_fill_manual(name = "serotype replacement (SR)", values = c("no SR" = "blue", "estimated SR" = "red", "complete SR" = "green")) +
+  labs(title = "", x = "vaccine regiment", y = "proportion of preventable VT disease") + 
+  scale_y_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.2)) + 
+  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
