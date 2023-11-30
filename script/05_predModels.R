@@ -207,30 +207,38 @@ pcv_samples <-
   pcv_samples %>%
   mutate(irr1 = round((0*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
          irr2 = round((err_DS$sr_min[1]*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
-         irr3 = round((1*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4))
+         irr3 = round((1*(cVT/cNVT) + 1) / ((dVT/dNVT) + 1), 4),
+         country = "Israel")
 
+#summary preventable disease estimates
 pcv_samples %>%
   group_by(pcv) %>%
-  #dplyr::filter(pcv == "pcv10gsk") %>%
-  summarise(irr1M = quantile(irr1, 0.5),
-         irr1L = quantile(irr1, 0.025),
-         irr1U = quantile(irr1, 0.975),
-         irr2M = quantile(irr1, 0.5),
-         irr2L = quantile(irr1, 0.025),
-         irr2U = quantile(irr1, 0.975),
-         irr3M = quantile(irr1, 0.5),
-         irr3L = quantile(irr1, 0.025),
-         irr3U = quantile(irr1, 0.975)) %>%
-  
-  
-ggplot() +
-  geom_point(aes(pcv, 1-irr1M, color = pcv), size = 1, shape = 4, stroke = 2, position = position_dodge2(width = 0.5), stat = "identity") +
-  geom_errorbar(aes(pcv,  ymin = 1-irr1L, ymax = 1-irr1U, color = pcv), width = 0, size = 1, position = position_dodge2(width = 0.5)) +
-  
+  summarise(irr1M = quantile(irr1, 0.500),
+            irr1L = quantile(irr1, 0.025),
+            irr1U = quantile(irr1, 0.975),
+            irr2M = quantile(irr1, 0.500),
+            irr2L = quantile(irr1, 0.025),
+            irr2U = quantile(irr1, 0.975),
+            irr3M = quantile(irr1, 0.500),
+            irr3L = quantile(irr1, 0.025),
+            irr3U = quantile(irr1, 0.975))
+
+#plot preventable disease distributions
+C <-
+pcv_samples %>%
+  ggplot() +
+  geom_density(aes(x = 1-irr1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.4) +
+  geom_density(aes(x = 1-irr2, group = pcv, fill = "estimated SR"), size = 0.6, alpha = 0.4) +
+  geom_density(aes(x = 1-irr3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.4) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
-  #scale_fill_manual(name = "serotype replacement (SR)", values = c("no SR" = "blue", "estimated SR" = "red", "complete SR" = "green")) +
-  labs(title = "", x = "vaccine regiment", y = "proportion of preventable VT disease") + 
-  scale_y_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.2)) + 
+  facet_grid(country~pcv, scales = "free_y") +
+  scale_fill_manual(name = "scenarios of serotype\nreplacement (SR)", values = c("no SR" = "blue", "estimated SR" = "red", "complete SR" = "green")) +
+  labs(title = "", x = "proportion of preventable VT disease", y = "density") + 
+  scale_x_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.2)) + 
   theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
+#save combined plots
+ggsave(here("output", "sfig7_vaximpact.png"),
+       plot = (C), 
+       width = 18, height = 6, unit = "in", dpi = 300)
