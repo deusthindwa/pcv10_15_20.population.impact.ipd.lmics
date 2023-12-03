@@ -98,20 +98,25 @@ y <-
 #explore the optimal serotype replacement parameter value over a 3 digit decimal place grid (assume VT elimination)
 j = 1
 sr = seq(0, 1, by = 0.001) 
-err_DS <- tibble(sr = sr, err_diff = rep(NA, 1001))
+err_DS <- tibble(sr = sr, err_diff = rep(NA, 1001), err_diffL = rep(NA, 1001), err_diffU = rep(NA, 1001))
 for (i in sr) {
   err_DS$err_diff[j] = abs(median(x$irr0) - median((i*(y$cVT/y$cNVT)+1)/((y$dVT/y$dNVT)+1)))
+  err_DS$err_diffL[j] = abs(quantile(x$irr0, 0.025) - quantile((i*(y$cVT/y$cNVT)+1)/((y$dVT/y$dNVT)+1), 0.025))
+  err_DS$err_diffU[j] = abs(quantile(x$irr0, 0.975) - quantile((i*(y$cVT/y$cNVT)+1)/((y$dVT/y$dNVT)+1), 0.975))
   j = j+1
 }
-err_DS1 <- err_DS %>% mutate(sr_min = sr[which.min(err_diff)], country = "Israel")
+err_DS <- err_DS %>% mutate(sr_min = round(sr[which.min(err_diff)], digits = 2),
+                            sr_minL = round(sr[which.min(err_diffL)], digits = 2),
+                            sr_minU = round(sr[which.min(err_diffU)], digits = 2),
+                            country = "Israel")
 
 #plot serotype replacement scenarios (post-VT eliminated)
 A <-
-err_DS1 %>%
+err_DS %>%
   ggplot() +
-  geom_line(aes(x = sr, y = err_diff), size = 1) +
+  geom_line(aes(x = sr, y = err_diff), lty = "twodash", size = 1) +
   geom_point(aes(x = sr[which.min(err_diff)], y = min(err_diff)), size = 2, stroke = 1, shape = 4, color = "black") +
-  geom_text(aes(x = sr[which.min(err_diff)], y = min(err_diff), label = sr_min), size = 4, angle = "0", vjust = 0.5, hjust = 1.4, fontface = "bold") +
+  geom_text(aes(x = sr[which.min(err_diff)], y = min(err_diff), label = paste0(sr_min, " (", sr_minU,"-", sr_minL, ")")), size = 4, angle = "0", vjust = 0.3, hjust = -0.1, fontface = "bold") +
   theme_bw(base_size = 16, base_family = "American typewriter") +
   labs(title = "", x = "proportion of NVT replacing VT carriage", y = "predicted vs observed median IRR error") + 
   facet_grid(.~country, scales = "free_y") +
@@ -149,61 +154,41 @@ ggsave(here("output", "sfig6_obsvspred.png"),
        plot = (A | B), 
        width = 16, height = 9, unit = "in", dpi = 300)
 
-#explore the optimal serotype replacement parameter value over a 3 digit decimal place grid (assume not all VT elimination)
-j = 1
-k = 0.09
-sr = seq(0, 1, by = 0.001) 
-err_DS <- tibble(sr = sr, err_diff = rep(NA, 1001))
 
-for (i in sr) {
-  err_DS$err_diff[j] = abs(median(x$irr0) - median((k*(y$dVT/y$dNVT) + i*(y$cVT/y$cNVT) + 1)/((y$dVT/y$dNVT)+1)))
-  j = j+1
-}
-err_DS2 <- err_DS %>% mutate(sr_min = sr[which.min(err_diff)], country = "Israel")
+#testing conditions that VT are still in circulation
+i = 1
+stR = seq(0, 1, by = 0.01)
+rVT = seq(0, 1, by = 0.01) 
+res_DS <- data_frame(stR = rep(NA, 10201), rVT = rep(NA, 10201), irr = rep(NA, 10201))
 
-#plot serotype replacement scenarios (not all post-VT eliminated)
-A <-
-  err_DS2 %>%
-  ggplot() +
-  geom_line(aes(x = sr, y = err_diff), size = 1) +
-  geom_point(aes(x = sr[which.min(err_diff)], y = min(err_diff)), size = 2, stroke = 1, shape = 4, color = "black") +
-  geom_text(aes(x = sr[which.min(err_diff)], y = min(err_diff), label = sr_min), size = 4, angle = "0", vjust = 0.5, hjust = 1.4, fontface = "bold") +
-  theme_bw(base_size = 16, base_family = "American typewriter") +
-  labs(title = "", x = "proportion of NVT replacing VT carriage", y = "predicted vs observed median IRR error") + 
-  facet_grid(.~country, scales = "free_y") +
-  scale_x_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.25)) + 
-  theme(strip.text.x = element_text(size = 0), strip.background = element_rect(fill = "gray90")) +
-  theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
-
-#calculate the incidence rate ratio based on predictive function
-y <-
-  y %>% mutate(irr1 = (k*(dVT/dNVT) + 0*(cVT/cNVT)+1)/((dVT/dNVT)+1), 
-               irr2 = (k*(dVT/dNVT) + err_DS2$sr_min[1]*(cVT/cNVT)+1)/((dVT/dNVT)+1), 
-               irr3 = (k*(dVT/dNVT) + 1*(cVT/cNVT)+1)/((dVT/dNVT)+1))
-
-B <-
-  bind_rows(
-    x %>% dplyr::select(irr0) %>% mutate(sr = "observed IRR", country = "Israel") %>% rename("irr" = "irr0"),
-    y %>% dplyr::select(irr1) %>% mutate(sr = "predicted IRR, no SR", country = "Israel") %>% rename("irr" = "irr1"),
-    y %>% dplyr::select(irr2) %>% mutate(sr = "predicted IRR, estimated SR", country = "Israel", country = "Israel") %>% rename("irr" = "irr2"),
-    y %>% dplyr::select(irr3) %>% mutate(sr = "predicted IRR, complete SR", country = "Israel") %>% rename("irr" = "irr3")) %>%
+for (j in stR) {
   
+  for (k in rVT) {
+    res_DS$stR[i] = j
+    res_DS$rVT[i] = k
+    res_DS$irr[i] = ((k*(y$dVT/y$dNVT)) + j*(y$cVT/y$cNVT)+1) / ((y$dVT/y$dNVT)+1)
+    i = i+1
+  }
+}
+
+C <-
+  res_DS %>%
   ggplot() +
-  geom_density_ridges(aes(x = log(irr), y = sr, fill = sr), size = 0.5, alpha = 0.5) +
+  geom_tile(aes(x = rVT, y = stR, fill = (1-res_DS$irr)), linejoin = "bevel") +
+  scale_fill_gradientn("z", colours = terrain.colors(100, rev=TRUE, alpha = 0.8), limits = c(-1.6,1)) +
+  geom_point(aes(x = 0, y = err_DS$sr_min[1]), shape = 4, size = 4, stroke = 2) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
-  labs(title = "", x = "log_incidence rate ratio", y = "Density") + 
-  facet_grid(.~country, scales = "free_y") +
+  labs(title = "", x = "residual VT carriage in mature PCV era", y = "proportion of NVT replacing VT carriage") +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
-  theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 0)) +
-  guides(fill = guide_legend(title = "Model validation and scenarios\nof serotype replacement (SR)")) +
+  theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14)) +
+  guides(fill = guide_legend(title = "proportion of\npreventable IPD")) +
   theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #save combined plots
-ggsave(here("output", "sfig7_obsvspred.png"),
-       plot = (A | B), 
-       width = 16, height = 9, unit = "in", dpi = 300)
+ggsave(here("output", "sfig7_rVTstRsens.png"),
+       plot = (C), 
+       width = 10, height = 10, unit = "in", dpi = 300)
 
 #====================================================================
 #====================================================================
