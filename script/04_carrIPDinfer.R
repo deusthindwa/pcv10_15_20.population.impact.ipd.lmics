@@ -3,77 +3,80 @@
 #Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
  
 #====================================================================
-#INVASIVENESS DATA MANIPULATION
+#INVASIVENESS DATA FROM SOUTH AFRICA 
 #====================================================================
 
 #import invasiveness data
-#data_inv <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
-#data_inv %>% readr::write_csv(x = ., file = here("data", "data_inv.csv"))
-data_inv <-
+#invasivenes <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
+invasivenes <-
   rio::import(here("data", "invasiveness_global.csv")) %>%
-  dplyr::select(everything(), -V1, -log.inv.prec.age1) %>%
-  dplyr::rename("log_inv" = "log.inv.age1") %>%
-  dplyr::mutate(log_inv = exp(log_inv))
-# 
-# #import carriage and ipd datasets
-# #data_all <- rio::import("https://raw.githubusercontent.com/nickjcroucher/progressionEstimation/main/data-raw/S_pneumoniae_infant_serotype.csv")
-# #data_all %>% readr::write_csv(x = ., file = here("data", "data_all.csv"))
-# data_all <- 
-#   rio::import(here("data", "data_all.csv")) %>%
-#   dplyr::mutate(country = word(study, 1, sep = "\\."),
-#                 phase = if_else(str_detect(study, "pre") == TRUE, "pre-pcv", "post-pcv")) %>%
-#   dplyr::select(country, phase, time_interval, type, carriage_samples, carriage, surveillance_population, disease) %>%
-#   dplyr::rename("period" = "time_interval", 
-#                 "st" = "type",  
-#                 "nsamples"= "carriage_samples", 
-#                 "ncarr" = "carriage",  
-#                 "npop" = "surveillance_population", 
-#                 "nipd" = "disease") %>%
-#   dplyr::mutate(prevcarr = ncarr/nsamples,
-#                 log_prevcarr = log(prevcarr+0.5),
-#                 log_npop = log(npop)) %>%
-#   #dplyr::filter(phase == "pre-pcv") %>%
-#   dplyr::select(country:ncarr, prevcarr, log_prevcarr, log_npop, nipd)
+  dplyr::select(everything(), -V1, -st.index) %>%
+  dplyr::rename("log_inv" = "log.inv.age1", "log_var" = "log.inv.prec.age1") %>%
+  dplyr::filter(st != "NT") %>%
+  dplyr::mutate(pcv20pfz = if_else(grepl(pcv20pfz1, st) == TRUE, "PCV20", "NVT"),
+                pcv15mek = if_else(grepl(pcv15mek1, st) == TRUE, "PCV15", "NVT"),
+                pcv13pfz = if_else(grepl(pcv13pfz1, st) == TRUE, "PCV13", "NVT"),
+                pcv10sii = if_else(grepl(pcv10sii1, st) == TRUE, "PCV10-sii", "NVT"),
+                pcv10gsk = if_else(grepl(pcv10gsk1, st) == TRUE, "PCV10-gsk", "NVT"),
+                pcv7pfz = if_else(grepl(pcv7pfz1, st) == TRUE, "PCV7", "NVT"))
 
+#calculate weighted mean invasiveness of VT and NVT for serotypes with unknown invasiveness
+inv_pcv20pfz <- invasivenes %>% group_by(pcv20pfz) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv20pfz, inv)
+inv_pcv15mek <- invasivenes %>% group_by(pcv15mek) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv15mek, inv)
+inv_pcv13pfz <- invasivenes %>% group_by(pcv13pfz) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv13pfz, inv)
+inv_pcv10sii <- invasivenes %>% group_by(pcv10sii) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv10sii, inv)
+inv_pcv10gsk <- invasivenes %>% group_by(pcv10gsk) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv10gsk, inv)
+inv_pcv7pfz  <- invasivenes %>% group_by(pcv7pfz) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv7pfz, inv)
 
-# #infer carriage data pre-PCV13 introduction in Malawi based on invasiveness and pre_PCV13 IPD
-# #fit a negative-binomial model of obs IPD and estimated invasiveness
-# mw_carb2011 <- mw_ipdb2011 + invasiveness data
-# model1 <- MASS::glm.nb(nipd ~ log_prevcarr + log_inv, 
-#                        data = mw_carb2011,
-#                        control = glm.control(maxit = 25, trace = T), 
-#                        link = log)
-# 
-# #add model estimates to the dataset
-# mw_carb2011 <- 
-#   mw_carb2011 %>% 
-#   dplyr::mutate(fit_ipd = model1$coefficients[1] + model1$coefficients[2]*log_prevcarr + model1$coefficients[3]*log_inv)
-# 
-# #visualize relationship between predicted and observed IPD
-# spearmanCI <- function(x, y, alpha = 0.05){ #function for spearman rank correlation coefficient 95%CIs
-#   rs <- cor(x, y, method = "spearman", use = "complete.obs")
-#   n <- sum(complete.cases(x, y))
-#   round(sort(tanh(atanh(rs) + c(-1,1)*sqrt((1+rs^2/2)/(n-3))*qnorm(p = alpha/2))), digits = 2)
-# }
-# 
-#   data_Bogota0 %>%
-#   dplyr::filter(!is.na(fit_ipd)) %>%
-#   mutate(spcoef = round(cor(fit_ipd, nipd,  method = "spearman"), digits = 2)) %>%
-#   
-#   ggplot(aes(x = fit_ipd, y = log(nipd), color = st)) +
-#   geom_point(size = 2.5, shape = 1, stroke = 2) +
-#   geom_text(aes(label = st), size = 3, angle = 45, fontface = "bold", vjust = 2, hjust = 0.5) +
-#   geom_text(aes(x = 3, y = 6, label = paste0("Spearman, p = ", spcoef, ", \n[95%CI = ", spearmanCI(fit_ipd, nipd)[1], "-", spearmanCI(fit_ipd, nipd)[2], "]")), color = "black", size = 4) +
-#   expand_limits(x = c(-1,7), y = c(-1,7)) +
-#   theme_bw(base_size = 14, base_family = "American Typewriter") +
-#   labs(title = "(A)", x = "invasive disease (model estimate)", y = "log_invasive disease (observed)") + 
-#   theme(axis.text.y = element_text(face = "bold", size = 10)) + 
-#   theme(legend.text = element_text(size = 12), legend.position = "none", legend.title = element_text(size = 12)) +
-#   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))
+#create ipd serotype dataset to match those of invasiveness
+#infer carriage data pre-pcv13 introduction in south africa (ipd <- carriage * invasiveness)
+sa_carb2009 <-
+  sa_ipdb2009 %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  mutate(p = n/sum(n), ipd = n*p, log_ipd = log(ipd)) %>%
+  dplyr::select(st, log_ipd)
+
+sa_carb2009 <-
+  left_join(sa_carb2009, invasivenes %>% 
+              dplyr::select(st, log_inv, log_var, pcv13pfz)) %>%
+  
+  mutate(pcv13pfz = if_else(grepl(pcv13pfz1, st) == TRUE, "PCV13", "NVT"),
+         log_inv = if_else(pcv13pfz == "PCV13" & is.na(log_inv), inv_pcv13pfz$inv[1],
+                           if_else(pcv13pfz == "NVT" & is.na(log_inv), inv_pcv13pfz$inv[2], log_inv))) %>%
+  
+  dplyr::select(pcv13pfz, everything(), -log_var)
+
+sa_carb2009 <- 
+  sa_carb2009 %>%
+  mutate(log_carr = log_ipd - log_inv, carr = exp(log_carr))
+
+#create ipd serotype dataset to match those of invasiveness
+#infer carriage data ppst-pcv13 introduction in south africa (ipd <- carriage * invasiveness)
+sa_cara2015 <-
+  sa_ipda2015 %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  mutate(p = n/sum(n), ipd = n*p, log_ipd = log(ipd)) %>%
+  dplyr::select(st, log_ipd)
+
+sa_cara2015 <-
+  left_join(sa_cara2015, invasivenes %>% 
+              dplyr::select(st, log_inv, log_var, pcv13pfz)) %>%
+  
+  mutate(pcv13pfz = if_else(grepl(pcv13pfz1, st) == TRUE, "PCV13", "NVT"),
+         log_inv = if_else(pcv13pfz == "PCV13" & is.na(log_inv), inv_pcv13pfz$inv[1],
+                           if_else(pcv13pfz == "NVT" & is.na(log_inv), inv_pcv13pfz$inv[2], log_inv))) %>%
+  
+  dplyr::select(pcv13pfz, everything(), -log_var)
+
+sa_cara2015 <- 
+  sa_cara2015 %>%
+  mutate(log_carr = log_ipd - log_inv, carr = exp(log_carr))
 
 #====================================================================
-
-
 #====================================================================
 
 
@@ -278,11 +281,46 @@ E <-
 
 #====================================================================
 
-#save combined plots
-ggsave(here("output", "fig1_carripdDesc.png"),
-       plot = (A / (B | C | D | E | plot_layout(widths = c(2,2,1,1))) + plot_layout(heights = c(1,2.3))), 
-       width = 18, height = 12, unit = "in", dpi = 300)
-
-#delete all plot objects
-rm(list = grep("data_", ls(), value = TRUE, invert = TRUE))
-
+# #save combined plots
+# ggsave(here("output", "fig1_carripdDesc.png"),
+#        plot = (A / (B | C | D | E | plot_layout(widths = c(2,2,1,1))) + plot_layout(heights = c(1,2.3))), 
+#        width = 18, height = 12, unit = "in", dpi = 300)
+# 
+# #delete all plot objects
+# rm(list = grep("data_", ls(), value = TRUE, invert = TRUE))
+# 
+# 
+# 
+# model1 <- MASS::glm.nb(nipd ~ log_prevcarr + log_inv,
+#                        data = mw_carb2011,
+#                        control = glm.control(maxit = 25, trace = T),
+#                        link = log)
+# 
+# #add model estimates to the dataset
+# mw_carb2011 <-
+#   mw_carb2011 %>%
+#   dplyr::mutate(fit_ipd = model1$coefficients[1] + model1$coefficients[2]*log_prevcarr + model1$coefficients[3]*log_inv)
+# 
+# #visualize relationship between predicted and observed IPD
+# spearmanCI <- function(x, y, alpha = 0.05){ #function for spearman rank correlation coefficient 95%CIs
+#   rs <- cor(x, y, method = "spearman", use = "complete.obs")
+#   n <- sum(complete.cases(x, y))
+#   round(sort(tanh(atanh(rs) + c(-1,1)*sqrt((1+rs^2/2)/(n-3))*qnorm(p = alpha/2))), digits = 2)
+# }
+# 
+# data_Bogota0 %>%
+#   dplyr::filter(!is.na(fit_ipd)) %>%
+#   mutate(spcoef = round(cor(fit_ipd, nipd,  method = "spearman"), digits = 2)) %>%
+#   
+#   ggplot(aes(x = fit_ipd, y = log(nipd), color = st)) +
+#   geom_point(size = 2.5, shape = 1, stroke = 2) +
+#   geom_text(aes(label = st), size = 3, angle = 45, fontface = "bold", vjust = 2, hjust = 0.5) +
+#   geom_text(aes(x = 3, y = 6, label = paste0("Spearman, p = ", spcoef, ", \n[95%CI = ", spearmanCI(fit_ipd, nipd)[1], "-", spearmanCI(fit_ipd, nipd)[2], "]")), color = "black", size = 4) +
+#   expand_limits(x = c(-1,7), y = c(-1,7)) +
+#   theme_bw(base_size = 14, base_family = "American Typewriter") +
+#   labs(title = "(A)", x = "invasive disease (model estimate)", y = "log_invasive disease (observed)") +
+#   theme(axis.text.y = element_text(face = "bold", size = 10)) +
+#   theme(legend.text = element_text(size = 12), legend.position = "none", legend.title = element_text(size = 12)) +
+#   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1))
+# 
+# 

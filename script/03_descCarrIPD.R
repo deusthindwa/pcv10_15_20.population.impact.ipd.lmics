@@ -3,12 +3,19 @@
 #Title: Potential benefits of newer pneumococcal vaccines on pediatric invasive pneumococcal disease in low- and middle-countries
 
 #====================================================================
-#IPD SEROTYPE-SPECIFIC DISTRIBUTION PLOT
+#SET COLORS FOR PLOTS
 #====================================================================
-#set the colors for each year
+
+#set the colors for each year and PCV regimen
 palx <- c("2005" = "#8B0019", "2006" = "#D16A5F", "2007" = "#E358A0", "2008" = "#8872D9", "2009" = "#C04AE1",
           "2010" = "#D598D9", "2011" = "#E0B1BC", "2012" = "#E3B45B", "2013" = "#D5E1E2", "2014" = "#84967C",
           "2015" = "#86AADA", "2016" = "#77DAD9", "2017" = "#84E4A6", "2018" = "#75EA5C", "2019" = "#C8DE5A")
+
+paly = c("PCV7" = "#C04AE1", "PCV10-gsk" = "#D598D9", "PCV10-sii" = "#D16A5F", "PCV13" = "#E3B45B", "PCV15" = "#C8DE5A", "PCV20" = "#84967C")
+
+#====================================================================
+#IPD SEROTYPE-SPECIFIC DISTRIBUTION PLOT
+#====================================================================
 
 #Malawi
 A <-
@@ -25,12 +32,13 @@ A <-
   geom_col(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_fill_manual(values = palx) +
+  scale_x_continuous(limit = c(0, 26), breaks = seq(0, 26, 5)) +
   labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
   facet_wrap(.~country) +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = c(0.7, 0.4), legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 #Israel
 B <-
@@ -47,16 +55,16 @@ B <-
   geom_col(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_fill_manual(values = palx) +
+  scale_x_continuous(limit = c(0, 26), breaks = seq(0, 26, 5)) +
   labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
   facet_wrap(.~country) +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = c(0.7, 0.4), legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 #South Africa
 C <-
-  #bind_rows(sa_ipdb2009, sa_ipda2015) %>%
   sa_ipd %>%
   group_by(country, yearc, st) %>%
   tally() %>%
@@ -69,23 +77,22 @@ C <-
   geom_col(aes(x = log(n+0.5), y = reorder(st, NN), fill = fct_rev(factor(yearc))), size = 0.3, color = "black", position = "stack") +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_fill_manual(values = palx) +
+  scale_x_continuous(limit = c(0, 53), breaks = seq(0, 53, 10)) +
   labs(title = "", x = "log_number of IPD isolates", y = "pneumococcal serotype") + 
   facet_wrap(.~country) +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = c(0.7, 0.4), legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 #save combined plots
 ggsave(here("output", "sfig1_ipdstDist.png"),
        plot = ((A/B) | C), 
-       width = 18, height = 20, unit = "in", dpi = 300)
+       width = 20, height = 20, unit = "in", dpi = 300)
 
 #====================================================================
 #IPD VACCINE SEROTYPE-GROUP DISTRIBUTION PLOT
 #====================================================================
-
-paly = c("PCV7" = "#C04AE1", "PCV10-gsk" = "#D598D9", "PCV10-sii" = "#D16A5F", "PCV13" = "#E3B45B", "PCV15" = "#C8DE5A", "PCV20" = "#84967C")
 
 #combine all IPD datasets and generate vaccine serotype
 sg_ipd <-
@@ -94,12 +101,12 @@ bind_rows(
   mw_ipda2015 %>% dplyr::select(yearc, st, country),
   is_ipd %>% dplyr::select(yearc, st, country),
   sa_ipd %>% dplyr::select(yearc, st, country)) %>%
-  dplyr::mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", "NVT"),
-                pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV15", "NVT"),
-                pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", "NVT"),
-                pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "PCV10-sii", "NVT"),
-                pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "PCV10-gsk", "NVT"),
-                pcv7pfz = if_else(grepl("4|6B|9V|14|18C|19F|23F", st) == TRUE, "PCV7", "NVT"))
+  dplyr::mutate(pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+                pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
+                pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+                pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
+                pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"),
+                pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"))
 
 D <-
 bind_rows(
@@ -144,27 +151,25 @@ bind_rows(
   mutate(N = sum(n), p = n/N) %>%
   ungroup() %>% 
   rename("sg" = "pcv7pfz")) %>%
-  filter(!is.na(sg)) %>%
   
-  dplyr::filter(sg != "NVT") %>%
+  dplyr::filter(!is.na(sg), sg != "NVT") %>%
   
   ggplot() +
-  geom_point(aes(x = yearc, y = p, group = sg), size = 1.5, position = position_dodge(width = 1.5), stroke = 2, shape = 1) +
-  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0)), group = sg), size = 1.5, position = position_dodge(width = 1.5)) +
+  geom_point(aes(x = yearc, y = p, group = sg), size = 1.5, stroke = 2, shape = 1) +
+  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0)), group = sg), size = 1.5) +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_color_manual(values = paly) +
-  scale_x_continuous(breaks = c(2005, 2009, 2013, 2017), limits = c(2005, 2019)) +
-  labs(title = "", x = "sampling year", y = "proportion of vaccine serotype IPD") + 
-  facet_wrap(.~country) +
+  labs(title = "", x = "year of sample isolation", y = "proportion of vaccine serotype IPD") + 
+  facet_wrap(.~country, scales = "free_x") +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(color = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
+  theme(legend.text = element_text(size = 12), legend.position = "bottom", legend.title = element_text(size = 12)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #save combined plots
 ggsave(here("output", "sfig2_ipdsgDist.png"),
        plot = (D), 
-       width = 12, height = 9, unit = "in", dpi = 300)
+       width = 16, height = 9, unit = "in", dpi = 300)
 
 #====================================================================
 #CARRIAGE SEROTYPE-SPECIFIC DISTRIBUTION PLOT
@@ -187,8 +192,8 @@ e <-
   scale_x_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.2), labels = scales::percent_format(accuracy = 1)) + 
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = "none", legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = "none", legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 E <-
   mw_cara2015 %>%
@@ -208,8 +213,8 @@ E <-
   scale_x_continuous(limit = c(0, 0.2), breaks = seq(0, 0.2, 0.04), labels = scales::percent_format(accuracy = 1)) + 
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = c(0.7, 0.4), legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 F <-
   is_car %>%
@@ -231,8 +236,8 @@ F <-
   scale_x_continuous(limit = c(0, 0.2), breaks = seq(0, 0.2, 0.04), labels = scales::percent_format(accuracy = 1)) + 
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(fill = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = c(0.7, 0.4), legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = c(0.7, 0.4), legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 #save combined plots
 ggsave(here("output", "sfig3_carstDist.png"),
@@ -243,26 +248,18 @@ ggsave(here("output", "sfig3_carstDist.png"),
 #CARRIAGE VACCINE SEROTYPE-GROUP DISTRIBUTION PLOT
 #====================================================================
 
-paly = c("PCV7" = "#C04AE1", "PCV10-gsk" = "#D598D9", "PCV10-sii" = "#D16A5F", "PCV13" = "#E3B45B", "PCV15" = "#C8DE5A", "PCV20" = "#84967C")
-
 #combine all IPD datasts and generate vaccine serotype
 sg_car <-
   bind_rows(
     mw_cara2015 %>% dplyr::select(yearc, st, country), 
     is_car %>% dplyr::select(yearc, st, country)) %>%
   mutate(st = if_else(st == "None", NA_character_, st)) %>%
-  dplyr::mutate(pcv20pfz = if_else(grepl("1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV20", 
-                                   if_else(is.na(st), NA_character_, "NVT")),
-                pcv15mek = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F", st) == TRUE, "PCV15", 
-                                   if_else(is.na(st), NA_character_, "NVT")),
-                pcv13pfz = if_else(grepl("1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F", st) == TRUE, "PCV13", 
-                                   if_else(is.na(st), NA_character_, "NVT")),
-                pcv10sii = if_else(grepl("1|5|6A|6B|7F|9V|14|19A|19F|23F", st) == TRUE, "PCV10-sii", 
-                                   if_else(is.na(st), NA_character_, "NVT")),
-                pcv10gsk = if_else(grepl("1|4|5|6B|7F|9V|14|18C|19F|23F", st) == TRUE, "PCV10-gsk", 
-                                   if_else(is.na(st), NA_character_, "NVT")),
-                pcv7pfz = if_else(grepl("4|6B|9V|14|18C|19F|23F", st) == TRUE, "PCV7", 
-                                  if_else(is.na(st), NA_character_, "NVT")))
+  dplyr::mutate(pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", if_else(is.na(st), NA_character_, "NVT")),
+                pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", if_else(is.na(st), NA_character_, "NVT")),
+                pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", if_else(is.na(st), NA_character_, "NVT")),
+                pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", if_else(is.na(st), NA_character_, "NVT")),
+                pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", if_else(is.na(st), NA_character_, "NVT")),
+                pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", if_else(is.na(st), NA_character_, "NVT")))
 
 G <-
   bind_rows(
@@ -307,22 +304,21 @@ G <-
       mutate(N = sum(n), p = n/N) %>%
       ungroup() %>% 
       rename("sg" = "pcv7pfz")) %>%
-  filter(!is.na(sg)) %>%
   
-  dplyr::filter(sg != "NVT") %>%
+  dplyr::filter(!is.na(sg), sg != "NVT") %>%
   
   ggplot() +
-  geom_point(aes(x = factor(yearc), y = p, group = sg), size = 1.5, position = position_dodge(width = 1.5), stroke = 2, shape = 1) +
-  geom_line(aes(x = factor(yearc), y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0)), group = sg), size = 1.5, position = position_dodge(width = 1.5)) +
+  geom_point(aes(x = yearc, y = p, group = sg), size = 1.5, stroke = 2, shape = 1) +
+  geom_line(aes(x = yearc, y = p, color = fct_rev(fct_relevel(factor(sg), "PCV7", after = 0)), group = sg), size = 1.5) +
   theme_bw(base_size = 16, base_family = "Lato") +
   scale_color_manual(values = paly) +
+  scale_y_continuous(limit = c(0, 0.4), breaks = seq(0, 0.4, 0.05), labels = scales::percent_format(accuracy = 1)) + 
   labs(title = "", x = "sampling year", y = "vaccine serotype carriage prevalence") + 
   facet_wrap(.~country, scales = "free_x") +
-  scale_y_continuous(limit = c(0, 0.65), breaks = seq(0, 0.65, 0.15), labels = scales::percent_format(accuracy = 1)) + 
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(color = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+  theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 #save combined plots
 ggsave(here("output", "sfig4_carsgDist.png"),
