@@ -317,7 +317,7 @@ G <-
   facet_wrap(.~country, scales = "free_x") +
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   guides(color = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 14), legend.position = "bottom", legend.title = element_text(size = 14)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 3))
 
 #save combined plots
@@ -341,7 +341,7 @@ bind_rows(
   ggplot(aes(x = agey, color = era, fill = era)) +
   geom_density(size = 1.5, alpha = 0.3) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "", x = "age (years)", y = "density (IPD isolates)") + 
+  labs(title = "", x = "age (years)", y = "density distribution of IPD isolates") + 
   facet_wrap(.~country, scales = "free_x") +
   scale_x_continuous(limit = c(1, 5), breaks = seq(1, 5, 1)) + 
   theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
@@ -352,4 +352,30 @@ bind_rows(
 #save combined plots
 ggsave(here("output", "sfig5_ipdAgeDist.png"),
        plot = (H), 
+       width = 10, height = 7, unit = "in", dpi = 300)
+
+#====================================================================
+#CARRIAGE AGE DISTRIBUTION
+#====================================================================
+
+I <-
+  bind_rows(
+    mw_cara2015 %>% mutate(era = "post-PCV13"),
+    is_carb2009 %>% mutate(era = "pre-PCV13"),
+    is_cara2013 %>% mutate(era = "post-PCV13")) %>%
+  
+  ggplot(aes(x = agey, color = era, fill = era)) +
+  geom_density(size = 1.5, alpha = 0.3) +
+  theme_bw(base_size = 16, base_family = "Lato") +
+  labs(title = "", x = "age (years)", y = "density distribution of carriage") + 
+  facet_wrap(.~country, scales = "free_x") +
+  scale_x_continuous(limit = c(1, 5), breaks = seq(1, 5, 1)) + 
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  guides(fill = guide_legend(title = "", label = FALSE), color = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = "right", legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "sfig5_carAgeDist.png"),
+       plot = (I), 
        width = 10, height = 7, unit = "in", dpi = 300)

@@ -67,17 +67,17 @@ mw_cara2015 <-
   dplyr::filter(agey <=5L) #there are no missing ages
 
 #redefine serotypes so they are sensible
-mw_ipdb2011 <- 
+mw_ipdb2011 <-
   mw_ipdb2011 %>%
   dplyr::mutate(st = if_else(st %in% c("6A", "6B", "6A/6B"), "6A/6B", st),
                 country = "Malawi")
 
-mw_ipda2015 <- 
+mw_ipda2015 <-
   mw_ipda2015 %>%
   dplyr::mutate(st = if_else(st %in% c("6A", "6B", "6A/6B"), "6A/6B", st),
                 country = "Malawi")
 
-mw_cara2015 <- 
+mw_cara2015 <-
   mw_cara2015 %>%
   dplyr::mutate(st = if_else(st %in% c("6A", "6B", "6A/6B"), "6A/6B", st),
                 country = "Malawi")

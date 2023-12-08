@@ -7,74 +7,100 @@
 #====================================================================
 
 #import invasiveness data
-#invasivenes <- rio::import("https://raw.githubusercontent.com/weinbergerlab/Invasiveness_Navajo/main/Results/mcmc_invasive_single_stage.csv")
 invasivenes <-
-  rio::import(here("data", "invasiveness_global.csv")) %>%
-  dplyr::select(everything(), -V1, -st.index) %>%
-  dplyr::rename("log_inv" = "log.inv.age1", "log_var" = "log.inv.prec.age1") %>%
+  rio::import(here("data", "invasiveness_global2.csv")) %>%
   dplyr::filter(st != "NT") %>%
-  dplyr::mutate(pcv20pfz = if_else(grepl(pcv20pfz1, st) == TRUE, "PCV20", "NVT"),
-                pcv15mek = if_else(grepl(pcv15mek1, st) == TRUE, "PCV15", "NVT"),
-                pcv13pfz = if_else(grepl(pcv13pfz1, st) == TRUE, "PCV13", "NVT"),
-                pcv10sii = if_else(grepl(pcv10sii1, st) == TRUE, "PCV10-sii", "NVT"),
-                pcv10gsk = if_else(grepl(pcv10gsk1, st) == TRUE, "PCV10-gsk", "NVT"),
-                pcv7pfz = if_else(grepl(pcv7pfz1, st) == TRUE, "PCV7", "NVT"))
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"),
+         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"),
+         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
+         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+         exp.inv = exp(log.inv)) %>%
+  dplyr::select(st, log.inv, exp.inv, everything(), -log.inv.prec) %>%
+  rbind(c("15C", -2.9465768, 0.052519182, "NVT", "NVT", "NVT", "NVT", "NVT", "NVT"),
+        c("6C", -2.893469602, 0.0553837194035684, "NVT", "PCV10-sii", "NVT", "PCV13", "PCV15", "PCV20")) %>%
+  mutate(st = if_else(st == "6A/C", "6A", st),
+         st = if_else(st == "15B/C", "15B", st),
+         exp.inv = as.numeric(exp.inv), log.inv = as.numeric(log.inv))
 
 #calculate weighted mean invasiveness of VT and NVT for serotypes with unknown invasiveness
-inv_pcv20pfz <- invasivenes %>% group_by(pcv20pfz) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv20pfz, inv)
-inv_pcv15mek <- invasivenes %>% group_by(pcv15mek) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv15mek, inv)
-inv_pcv13pfz <- invasivenes %>% group_by(pcv13pfz) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv13pfz, inv)
-inv_pcv10sii <- invasivenes %>% group_by(pcv10sii) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv10sii, inv)
-inv_pcv10gsk <- invasivenes %>% group_by(pcv10gsk) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv10gsk, inv)
-inv_pcv7pfz  <- invasivenes %>% group_by(pcv7pfz) %>% mutate(inv = weighted.mean(log_inv, log_var)) %>% ungroup() %>% distinct(pcv7pfz, inv)
+inv_pcv20pfz <- invasivenes %>% group_by(pcv20pfz) %>% mutate(inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv20pfz, inv)
+inv_pcv15mek <- invasivenes %>% group_by(pcv15mek) %>% mutate(inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv15mek, inv)
+inv_pcv13pfz <- invasivenes %>% group_by(pcv13pfz) %>% mutate(inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv13pfz, inv)
+inv_pcv10sii <- invasivenes %>% group_by(pcv10sii) %>% mutate(inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv10sii, inv)
+inv_pcv10gsk <- invasivenes %>% group_by(pcv10gsk) %>% mutate(inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv10gsk, inv)
+inv_pcv7pfz  <- invasivenes %>% group_by(pcv7pfz) %>% mutate(inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv7pfz, inv)
+inv_gen = (inv_pcv20pfz$inv[2] + inv_pcv15mek$inv[2] + inv_pcv13pfz$inv[2] + inv_pcv10sii$inv[2] + inv_pcv10gsk$inv[2] + inv_pcv7pfz$inv[2])/6 #average NVT invasiveness
 
 #create ipd serotype dataset to match those of invasiveness
 #infer carriage data pre-pcv13 introduction in south africa (ipd <- carriage * invasiveness)
 sa_carb2009 <-
   sa_ipdb2009 %>%
+  dplyr::select(yearc, st) %>%
   group_by(st) %>%
   tally() %>%
   ungroup() %>%
-  mutate(p = n/sum(n), ipd = n*p, log_ipd = log(ipd)) %>%
-  dplyr::select(st, log_ipd)
-
-sa_carb2009 <-
-  left_join(sa_carb2009, invasivenes %>% 
-              dplyr::select(st, log_inv, log_var, pcv13pfz)) %>%
+  mutate(p = n/sum(n), ipd = n*p) %>%
+  dplyr::select(st, ipd) %>%
   
-  mutate(pcv13pfz = if_else(grepl(pcv13pfz1, st) == TRUE, "PCV13", "NVT"),
-         log_inv = if_else(pcv13pfz == "PCV13" & is.na(log_inv), inv_pcv13pfz$inv[1],
-                           if_else(pcv13pfz == "NVT" & is.na(log_inv), inv_pcv13pfz$inv[2], log_inv))) %>%
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "C", "15C", st)) %>%
+  group_by(st) %>%
+  summarise(ipd = mean(ipd)) %>% 
   
-  dplyr::select(pcv13pfz, everything(), -log_var)
-
-sa_carb2009 <- 
-  sa_carb2009 %>%
-  mutate(log_carr = log_ipd - log_inv, carr = exp(log_carr))
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_gen, exp.inv)) %>%
+  mutate(log.inv = log(exp.inv)) %>%
+  
+  #fill the NAs on serotype group
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"),
+         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"),
+         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
+         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+         prev1 = ipd/exp.inv) %>%
+  mutate(scalex = 0.8/sum(prev1), #assume total prevalence is up to 80% Thindwa et al.
+         prev2 = scalex*prev1) %>%
+  dplyr::select(st, ipd, exp.inv, log.inv, prev1, prev2, everything())
 
 #create ipd serotype dataset to match those of invasiveness
 #infer carriage data ppst-pcv13 introduction in south africa (ipd <- carriage * invasiveness)
 sa_cara2015 <-
   sa_ipda2015 %>%
+  dplyr::select(yearc, st) %>%
   group_by(st) %>%
   tally() %>%
   ungroup() %>%
-  mutate(p = n/sum(n), ipd = n*p, log_ipd = log(ipd)) %>%
-  dplyr::select(st, log_ipd)
-
-sa_cara2015 <-
-  left_join(sa_cara2015, invasivenes %>% 
-              dplyr::select(st, log_inv, log_var, pcv13pfz)) %>%
+  mutate(p = n/sum(n), ipd = n*p) %>%
+  dplyr::select(st, ipd) %>%
   
-  mutate(pcv13pfz = if_else(grepl(pcv13pfz1, st) == TRUE, "PCV13", "NVT"),
-         log_inv = if_else(pcv13pfz == "PCV13" & is.na(log_inv), inv_pcv13pfz$inv[1],
-                           if_else(pcv13pfz == "NVT" & is.na(log_inv), inv_pcv13pfz$inv[2], log_inv))) %>%
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "C", "15C", st),
+         st = if_else(st == "F", "12F", st),) %>%
+  group_by(st) %>%
+  summarise(ipd = mean(ipd)) %>% 
   
-  dplyr::select(pcv13pfz, everything(), -log_var)
-
-sa_cara2015 <- 
-  sa_cara2015 %>%
-  mutate(log_carr = log_ipd - log_inv, carr = exp(log_carr))
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_gen, exp.inv)) %>%
+  mutate(log.inv = log(exp.inv)) %>%
+  
+  #fill the NAs on serotype group
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"),
+         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"),
+         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
+         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+         prev1 = ipd/exp.inv) %>%
+  mutate(scalex = 0.6/sum(prev1), #assume total prevalence is up to 80% Thindwa et al.
+         prev2 = scalex*prev1) %>%
+  dplyr::select(st, ipd, exp.inv, log.inv, prev1, prev2, everything())
 
 #====================================================================
 #====================================================================
