@@ -10,9 +10,9 @@
 invasivenes <-
   rio::import(here("data", "invasiveness_global2.csv")) %>%
   dplyr::filter(st != "NT") %>%
-  mutate(pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"),
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6A|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"), #add 6A cross-protection
          pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
-         pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"), #add 6A cross-protection
          pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
          pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
          pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
@@ -30,7 +30,6 @@ inv_pcv7pfz  <- invasivenes %>% group_by(pcv7pfz) %>% mutate(wgt.inv = weighted.
 inv_nvt = (inv_pcv20pfz$wgt.inv[2] + inv_pcv15mek$wgt.inv[2] + inv_pcv13pfz$wgt.inv[2] + inv_pcv10sii$wgt.inv[2] + inv_pcv10gsk$wgt.inv[2] + inv_pcv7pfz$wgt.inv[2])/6 #average NVT invasiveness
 inv_vt = (inv_pcv20pfz$wgt.inv[1] + inv_pcv15mek$wgt.inv[1] + inv_pcv13pfz$wgt.inv[1] + inv_pcv10sii$wgt.inv[1] + inv_pcv10gsk$wgt.inv[1] + inv_pcv7pfz$wgt.inv[1])/6 #average NVT invasiveness
 
-
 #create ipd serotype dataset to match those of invasiveness
 #infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
 sa_carb2009 <-
@@ -47,7 +46,7 @@ sa_carb2009 <-
   tidyr::separate_rows(., st) %>%
   mutate(st = if_else(st == "C", "15C", st)) %>%
   group_by(st) %>%
-  summarise(ipd = mean(ipd)) %>% 
+  summarise(ipd = sum(ipd)) %>% 
   ungroup() %>%
   
   #join IPD serotypes with invasiveness
@@ -56,9 +55,9 @@ sa_carb2009 <-
   mutate(log.inv = log(exp.inv)) %>%
   
   #fill the NAs on serotype group
-  mutate(pcv7pfz = if_else(grepl("\\b(4|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"),
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6A|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"), #add 6A cross-protection
          pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
-         pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"), #add 6A cross-protection
          pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
          pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
          pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
@@ -84,7 +83,7 @@ sa_cara2015 <-
   tidyr::separate_rows(., st) %>%
   mutate(st = if_else(st == "C", "15C", st), st = if_else(st == "F", "12F", st)) %>%
   group_by(st) %>%
-  summarise(ipd = mean(ipd)) %>% 
+  summarise(ipd = sum(ipd)) %>% 
   ungroup() %>%
 
   #join IPD serotypes with invasiveness
@@ -100,7 +99,7 @@ sa_cara2015 <-
          pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
          pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
          prev1 = ipd/exp.inv,
-         scalex = 0.8/sum(prev1), #assume total prevalence is up to 50% Olwagen et al.
+         scalex = 0.5/sum(prev1), #assume total prevalence is up to 50% Olwagen et al.
          prev2 = scalex*prev1) %>% #scale prevalence according
   dplyr::select(st, ipd, exp.inv, log.inv, prev1, prev2, everything())
 
@@ -111,9 +110,9 @@ ggplot() +
   geom_point(data = dplyr::filter(sa_carb2009, pcv7pfz == "PCV7"), aes(x = log(ipd), y = prev2), color = "#8B0019", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv7pfz == "PCV7"), aes(x = log(ipd), y = prev2), color = "#8B0019", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV7", x = "observed log_ipd", y = "inferred VT carriage prevalence") +
+  labs(title = "PCV7 VT", x = "observed log_ipd", y = "inferred VT carriage prevalence") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 16))
 
@@ -122,7 +121,7 @@ ggplot() +
   geom_point(data = dplyr::filter(sa_carb2009, pcv7pfz == "NVT"), aes(x = log(ipd), y = prev2), color = "#8B0019", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv7pfz == "NVT"), aes(x = log(ipd), y = prev2), color = "#8B0019", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   labs(title = "PCV7 NVT", x = "observed log_ipd", y = "inferred NVT carriage prevalence") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
@@ -133,9 +132,9 @@ ggplot() +
   geom_point(data = dplyr::filter(sa_carb2009, pcv10sii == "PCV10-sii"), aes(x = log(ipd), y = prev2), color = "#D16A5F", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv10sii == "PCV10-sii"), aes(x = log(ipd), y = prev2), color = "#D16A5F", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV10-sii", x = "observed log_ipd", y = "") +
+  labs(title = "PCV10-sii VT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
@@ -144,7 +143,7 @@ B2 <-
   geom_point(data = dplyr::filter(sa_carb2009, pcv10sii == "NVT"), aes(x = log(ipd), y = prev2), color = "#D16A5F", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv10sii == "NVT"), aes(x = log(ipd), y = prev2), color = "#D16A5F", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   labs(title = "PCV10-sii NVT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
@@ -155,9 +154,9 @@ ggplot() +
   geom_point(data = dplyr::filter(sa_carb2009, pcv10gsk == "PCV10-gsk"), aes(x = log(ipd), y = prev2), color = "#E358A0", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv10gsk == "PCV10-gsk"), aes(x = log(ipd), y = prev2), color = "#E358A0", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV10-gsk", x = "observed log_ipd", y = "") +
+  labs(title = "PCV10-gsk VT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
@@ -166,7 +165,7 @@ C2 <-
   geom_point(data = dplyr::filter(sa_carb2009, pcv10gsk == "NVT"), aes(x = log(ipd), y = prev2), color = "#E358A0", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv10gsk == "NVT"), aes(x = log(ipd), y = prev2), color = "#E358A0", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   labs(title = "PCV10-gsk NVT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
@@ -177,9 +176,9 @@ ggplot() +
   geom_point(data = dplyr::filter(sa_carb2009, pcv13pfz == "PCV13"), aes(x = log(ipd), y = prev2), color = "#8872D9", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv13pfz == "PCV13"), aes(x = log(ipd), y = prev2), color = "#8872D9", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV13", x = "observed log_ipd", y = "") +
+  labs(title = "PCV13 VT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
@@ -188,7 +187,7 @@ D2 <-
   geom_point(data = dplyr::filter(sa_carb2009, pcv13pfz == "NVT"), aes(x = log(ipd), y = prev2), color = "#8872D9", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv13pfz == "NVT"), aes(x = log(ipd), y = prev2), color = "#8872D9", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   labs(title = "PCV13 NVT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
@@ -199,9 +198,9 @@ ggplot() +
   geom_point(data = dplyr::filter(sa_carb2009, pcv15mek == "PCV15"), aes(x = log(ipd), y = prev2), color = "#C04AE1", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv15mek == "PCV15"), aes(x = log(ipd), y = prev2), color = "#C04AE1", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV15 NVT", x = "observed log_ipd", y = "") +
+  labs(title = "PCV15 VT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
@@ -210,22 +209,22 @@ E2 <-
   geom_point(data = dplyr::filter(sa_carb2009, pcv15mek == "NVT"), aes(x = log(ipd), y = prev2), color = "#C04AE1", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv15mek == "NVT"), aes(x = log(ipd), y = prev2), color = "#C04AE1", size = 2, stroke = 2, shape = 4) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV15", x = "observed log_ipd", y = "") +
+  labs(title = "PCV15 NVT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
 F1 <-
 ggplot() + 
-  geom_point(data = dplyr::filter(sa_carb2009, pcv20pfz == "PCV20"), aes(x = log(ipd), y = prev2, shape = "pre-PCV"), color = "#E3B45B", size = 2, stroke = 2) +
-  geom_point(data = dplyr::filter(sa_cara2015, pcv20pfz == "PCV20"), aes(x = log(ipd), y = prev2, shape = "post-PCV"), color = "#E3B45B", size = 2, stroke = 2) +
+  geom_point(data = dplyr::filter(sa_carb2009, pcv20pfz == "PCV20"), aes(x = log(ipd), y = prev2, shape = "pre-PCV13"), color = "#E3B45B", size = 2, stroke = 2) +
+  geom_point(data = dplyr::filter(sa_cara2015, pcv20pfz == "PCV20"), aes(x = log(ipd), y = prev2, shape = "post-PCV13"), color = "#E3B45B", size = 2, stroke = 2) +
   geom_text(data = dplyr::filter(sa_carb2009, pcv20pfz == "PCV20"), aes(x = log(ipd), y = prev2, label = st), color = "black", size = 3, fontface = "bold", vjust = 0, hjust = 0) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
-  scale_shape_manual(name='Period', breaks = c("pre-PCV", "post-PCV"), values=c("pre-PCV" = 1, "post-PCV" = 4))+
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
+  scale_shape_manual(name='Period', breaks = c("pre-PCV13", "post-PCV13"), values=c("pre-PCV13" = 1, "post-PCV13" = 4))+
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "PCV20", x = "observed log_ipd", y = "") +
+  labs(title = "PCV20 VT", x = "observed log_ipd", y = "") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
@@ -234,7 +233,7 @@ F2 <-
   geom_point(data = dplyr::filter(sa_carb2009, pcv20pfz == "NVT"), aes(x = log(ipd), y = prev2), color = "#E3B45B", size = 2, stroke = 2, shape = 1) +
   geom_point(data = dplyr::filter(sa_cara2015, pcv20pfz == "NVT"), aes(x = log(ipd), y = prev2), color = "#E3B45B", size = 2, stroke = 2, shape = 4) +
   geom_text(data = dplyr::filter(sa_carb2009, pcv20pfz == "NVT"), aes(x = log(ipd), y = prev2, label = st), color = "black", size = 3, fontface = "bold", vjust = 0, hjust = 0) +
-  scale_x_continuous(limit = c(1, 6), breaks = seq(1, 6, 1)) +
+  scale_x_continuous(limit = c(1, 7), breaks = seq(1, 7, 1)) +
   scale_y_continuous(limit = c(0, 0.08), breaks = seq(0, 0.08, 0.02), labels = scales::percent_format(accuracy = 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   labs(title = "PCV20 NVT", x = "observed log_ipd", y = "") +
@@ -305,12 +304,12 @@ A <-
   
   ggplot() +
   geom_col(aes(x = factor(reg,levels(factor(reg))[c(6,1,2,3,4,5)]), y=car, fill = `serotype group`), position = position_dodge()) +
-  scale_y_continuous(limit = c(0, 0.9), breaks = seq(0, 0.9, 0.2), labels = scales::percent_format(accuracy = 1)) +
+  scale_y_continuous(limit = c(0, 0.6), breaks = seq(0, 0.6, 0.2), labels = scales::percent_format(accuracy = 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
   labs(title = "", x = "PCV regimen", y = "serotype group carriage prevalence") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 16)) +
-  facet_grid(.~period)
+  facet_grid(.~ factor(period, levels = c("pre-PCV", "post-PCV")))
 
 #save combined plots
 ggsave(here("output", "sfig10_carsgDist.png"),

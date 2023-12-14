@@ -10,11 +10,12 @@ A <-
   bind_rows(is_err, sa_err) %>%
   ggplot() +
   geom_line(aes(x = sr, y = err_diff, color = country), lty = "twodash", size = 1) +
-  #geom_point(aes(x = sr[which.min(err_diff)], y = min(err_diff), color = country), size = 2, stroke = 1, shape = 8) +
+  geom_point(aes(y = 0, x = sr_min, group = country, color = country), shape = 4, size = 2, stroke = 2) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
+  facet_grid(.~"", scales = "free_y") +
   labs(title = "", x = "proportion of NVT replacing VT carriage", y = "predicted vs observed median IRR error") + 
   scale_x_continuous(limit = c(0, 1), breaks = seq(0, 1, 0.25)) + 
-  theme(strip.text.x = element_text(size = 0), strip.background = element_rect(fill = "gray90")) +
+  theme(strip.text.x = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14)) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
@@ -44,7 +45,7 @@ C <-
   bind_rows(is_pcvsamples, sa_pcvsamples) %>%
   ggplot() +
   geom_density(aes(x = 1-irr1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
-  #geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
+  geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
   geom_density(aes(x = 1-irr3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.3) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
   geom_vline(xintercept = 0, linetype = "dashed") +
