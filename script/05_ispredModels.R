@@ -28,6 +28,7 @@
 #IRR = [y*c+1]/[d+1], where c = Cvt/Cnvt, d = Dvt/Dnvt
 
 #====================================================================
+#POST-PCV PREDICTION MODEL
 #====================================================================
 
 #define constants and scenarios
@@ -119,6 +120,7 @@ y %>% dplyr::select(irr2) %>% mutate(sr = "predicted IRR, baseline SR", country 
 y %>% dplyr::select(irr3) %>% mutate(sr = "predicted IRR, complete SR", country = "Israel") %>% rename("irr" = "irr3"))
 
 #====================================================================
+#MODEL VALIDATION
 #====================================================================
 
 #compute expected pcv impact with a prediction model

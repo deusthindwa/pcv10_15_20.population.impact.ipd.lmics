@@ -3,7 +3,7 @@
 #Title: Potential benefits of newer pneumococcal vaccines on paediatric invasive pneumococcal disease in low- and middle-countries
  
 #====================================================================
-#INVASIVENESS DATA FROM SOUTH AFRICA 
+#INVASIVENESS DATA
 #====================================================================
 
 #import invasiveness data
@@ -29,6 +29,11 @@ inv_pcv10gsk <- invasivenes %>% group_by(pcv10gsk) %>% mutate(wgt.inv = weighted
 inv_pcv7pfz  <- invasivenes %>% group_by(pcv7pfz) %>% mutate(wgt.inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv7pfz, wgt.inv)
 inv_nvt = (inv_pcv20pfz$wgt.inv[2] + inv_pcv15mek$wgt.inv[2] + inv_pcv13pfz$wgt.inv[2] + inv_pcv10sii$wgt.inv[2] + inv_pcv10gsk$wgt.inv[2] + inv_pcv7pfz$wgt.inv[2])/6 #average NVT invasiveness
 inv_vt = (inv_pcv20pfz$wgt.inv[1] + inv_pcv15mek$wgt.inv[1] + inv_pcv13pfz$wgt.inv[1] + inv_pcv10sii$wgt.inv[1] + inv_pcv10gsk$wgt.inv[1] + inv_pcv7pfz$wgt.inv[1])/6 #average NVT invasiveness
+
+
+#====================================================================
+#PREDICTIONS FORM SOUTH AFRICA
+#====================================================================
 
 #create ipd serotype dataset to match those of invasiveness
 #infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
@@ -66,6 +71,43 @@ sa_carb2009 <-
          prev2 = scalex*prev1) %>% #scale prevalence according
   dplyr::select(st, ipd, exp.inv, log.inv, prev1, prev2, everything())
 
+#====================================================================
+
+#create carriage serotype dataset for pre PCV7 introduction
+sa_carb2011 <-
+  sa_ipd %>%
+  dplyr::filter(yearc >=2010, yearc <=2011) %>%
+  dplyr::select(yearc, st) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd" = "n") %>%
+  mutate(ipd = if_else(str_length(st)>3, ipd/2, ipd)) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd) %>%
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "C", "15C", st)) %>%
+  group_by(st) %>%
+  summarise(ipd = sum(ipd)) %>% 
+  ungroup() %>%
+  
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_nvt, exp.inv)) %>%
+  mutate(log.inv = log(exp.inv)) %>%
+  
+  #fill the NAs on serotype group
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6A|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"), #add 6A cross-protection
+         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"), #add 6A cross-protection
+         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
+         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+         prev1 = ipd/exp.inv,
+         scalex = 0.70/sum(prev1), #assume total prevalence is up to 80% Nzeze et al.
+         prev2 = scalex*prev1) %>% #scale prevalence according
+  dplyr::select(st, ipd, exp.inv, log.inv, prev1, prev2, everything())
+
+#====================================================================
 
 #create ipd serotype dataset to match those of invasiveness
 #infer carriage data post-pcv13 introduction in south africa (carriage <- ipd / invasiveness)
@@ -103,6 +145,7 @@ sa_cara2015 <-
          prev2 = scalex*prev1) %>% #scale prevalence according
   dplyr::select(st, ipd, exp.inv, log.inv, prev1, prev2, everything())
 
+#====================================================================
 
 #plots of the relationship between serotype-specific carriage prevalence and ipd
 A1 <-
@@ -245,8 +288,9 @@ ggsave(here("output", "sfig9_carstDist.png"),
        plot = (A1 | B1 | C1 | D1 | E1 | F1) / (A2 | B2 | C2 | D2 | E2 | F2), 
        width = 26, height = 14, unit = "in", dpi = 300)
 
+#====================================================================
 
-#plots of the relationship between serotype group-specific carriage prevalence and ipd and ivasiveness
+#plots of the relationship between serotype group-specific carriage prevalence and ipd
 sa_pcv <-
   bind_rows(
     sa_carb2009 %>% group_by(pcv7pfz) %>% tally(prev2) %>% 
@@ -306,7 +350,7 @@ A <-
   geom_col(aes(x = factor(reg,levels(factor(reg))[c(6,1,2,3,4,5)]), y=car, fill = `serotype group`), position = position_dodge()) +
   scale_y_continuous(limit = c(0, 0.6), breaks = seq(0, 0.6, 0.2), labels = scales::percent_format(accuracy = 1)) +
   theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "", x = "PCV regimen", y = "serotype group carriage prevalence") +
+  labs(title = "", x = "PCV regimen", y = "inferred serotype group carriage prevalence") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 16)) +
   facet_grid(.~ factor(period, levels = c("pre-PCV", "post-PCV")))
@@ -317,8 +361,305 @@ ggsave(here("output", "sfig10_carsgDist.png"),
        width = 20, height = 7, unit = "in", dpi = 300)
 
 #====================================================================
-#INVASIVENESS DATA FROM MALAWI
+
+#model validation of inferred carriage data using pre- and post-PCV7 data
+sa_ipdPred1 <- 
+  sa_ipd %>% 
+  dplyr::filter(yearc <2009) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd1" = "n") %>%
+  mutate(ipd1 = if_else(str_length(st)>3, (ipd1/2+0.5), ipd1)) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd1) %>%
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "C", "15C", st)) %>%
+  group_by(st) %>%
+  summarise(ipd1 = sum(ipd1)/4) %>%  #4y surveillance from 2005-2008
+  ungroup()
+
+sa_ipdPred2 <- 
+  sa_ipd %>% 
+  dplyr::filter(yearc >=2010, yearc <=2011) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd2" = "n") %>%
+  mutate(ipd2 = if_else(str_length(st)>3, (ipd2/2+0.5), ipd2)) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd2) %>%
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "C", "15C", st)) %>%
+  group_by(st) %>%
+  summarise(ipd2 = sum(ipd2)/2) %>%  #2y surveillance from 2010-2011
+  ungroup()
+
+sa_ipdPred3 <- 
+  sa_ipd %>% 
+  dplyr::filter(yearc >=2015) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd3" = "n") %>%
+  mutate(ipd3 = if_else(str_length(st)>3, (ipd3/2+0.5), ipd3)) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd3) %>%
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "C", "15C", st), st = if_else(st == "F", "12F", st)) %>%
+  group_by(st) %>%
+  summarise(ipd3 = sum(ipd3)/5) %>%  #5y surveillance from 2015-2019
+  ungroup()
+
+sa_ipdPred <-
+  sa_ipdPred1 %>%
+  full_join(sa_ipdPred2) %>%
+  full_join(sa_ipdPred3) %>%
+  full_join(sa_carb2009 %>% dplyr::select(st, prev2) %>% rename("prev1" = "prev2")) %>%
+  full_join(sa_carb2011 %>% dplyr::select(st, prev2)) %>%
+  full_join(sa_cara2015 %>% dplyr::select(st, prev2) %>% rename("prev3" = "prev2")) %>%
+  mutate(cond = if_else(is.na(ipd1) | is.na(ipd2) | is.na(ipd3) | is.na(prev1) | is.na(prev2) | is.na(prev3), NA_integer_, 1L)) %>%
+  dplyr::filter(!is.na(cond)) %>%
+  dplyr::select(everything(), -cond) %>%
+  mutate(ipd1 = log(ipd1+1),
+         ipd2 = log(ipd2+1),
+         ipd3 = log(ipd3+1),
+         prev1 = log(prev1),
+         prev2 = log(prev2),
+         prev3 = log(prev3),
+         prevfR = prev2/prev1,
+         prevfR = log(prevfR))
+
+#fit a negative-binomial model to predict post-PCV7 IPD
+#ipd_2010-2011 = ipd_2005-2008 * (carr_prev_2010-11/carr_prev_2005-2008)
+sa_model1 <- tidy(MASS::glm.nb(ipd2 ~ ipd1 + prevfR, data = sa_ipdPred), 
+                   exponentiate = TRUE, 
+                   conf.int = TRUE, 
+                   conf.level = 0.95)
+sa_ipdPred <- 
+  sa_ipdPred %>% 
+  dplyr::mutate(ipdfit1 = sa_model1$estimate[1] + sa_model1$estimate[2]*exp(ipd1-1) + sa_model1$estimate[3]*exp(prevfR)) #exp(ipd1-1) to revert to original IPD values from log(ipd1+1)
+
+rsq <- function (x, y) cor(x, y) ^ 2
+
+#visualize relationship between carriage prevalence and IPD
+A <- 
+  sa_ipdPred %>%
+  mutate(r = abs(round((stats::cor(ipd2, log(ipdfit1), method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(ipd2, log(ipdfit1))[3]$p.value),
+         r2 = abs(round(rsq(ipd2, log(ipdfit1)), digits = 3))) %>%
+  ggplot() +
+  geom_point(aes(x = (ipd2), y = log(ipdfit1)), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 5.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter") +
+  geom_text(aes(x = 1, y = 5.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter") +
+  scale_x_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "A", x = "observed log_ipd", y = "predicted log_ipd") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = "none")
+
+B <- 
+  sa_ipdPred %>%
+  mutate(pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT")) %>%
+  group_by(pcv10sii) %>%
+  mutate(r = abs(round((stats::cor(ipd2, log(ipdfit1), method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(ipd2, log(ipdfit1))[3]$p.value),
+         r2 = abs(round(rsq(ipd2, log(ipdfit1)), digits = 3))) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = (ipd2), y = log(ipdfit1), color = pcv10sii), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 5.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  geom_text(aes(x = 1, y = 5.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  scale_x_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "B", x = "observed log_ipd", y = "") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = c(0.7,0.1), legend.title = element_blank())
+
+C <- 
+  sa_ipdPred %>%
+  mutate(pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT")) %>% #add 6A cross-protection 
+  group_by(pcv10gsk) %>%
+  mutate(r = abs(round((stats::cor(ipd2, log(ipdfit1), method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(ipd2, log(ipdfit1))[3]$p.value),
+         r2 = abs(round(rsq(ipd2, log(ipdfit1)), digits = 3))) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = (ipd2), y = log(ipdfit1), color = pcv10gsk), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 5.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  geom_text(aes(x = 1, y = 5.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  scale_x_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "C", x = "observed log_ipd", y = "") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = c(0.7,0.1), legend.title = element_blank())
+
+D <- 
+  sa_ipdPred %>%
+  mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>% 
+  group_by(pcv13pfz) %>%
+  mutate(r = abs(round((stats::cor(ipd2, log(ipdfit1), method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(ipd2, log(ipdfit1))[3]$p.value),
+         r2 = abs(round(rsq(ipd2, log(ipdfit1)), digits = 3))) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = (ipd2), y = log(ipdfit1), color = pcv13pfz), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 5.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  geom_text(aes(x = 1, y = 5.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  scale_x_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "D", x = "observed log_ipd", y = "") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = c(0.7,0.1), legend.title = element_blank())
+
+E <- 
+  sa_ipdPred %>%
+  mutate(pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT")) %>% 
+  group_by() %>%
+  mutate(r = abs(round((stats::cor(ipd2, log(ipdfit1), method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(ipd2, log(ipdfit1))[3]$p.value),
+         r2 = abs(round(rsq(ipd2, log(ipdfit1)), digits = 3))) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = (ipd2), y = log(ipdfit1), color = pcv15mek), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 5.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  geom_text(aes(x = 1, y = 5.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  scale_x_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "E", x = "observed log_ipd", y = "") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = c(0.7,0.1), legend.title = element_blank())
+
+F <- 
+  sa_ipdPred %>%
+  mutate(pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT")) %>% 
+  group_by() %>%
+  mutate(r = abs(round((stats::cor(ipd2, log(ipdfit1), method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(ipd2, log(ipdfit1))[3]$p.value),
+         r2 = abs(round(rsq(ipd2, log(ipdfit1)), digits = 3))) %>%
+  ungroup() %>%
+  ggplot() +
+  geom_point(aes(x = (ipd2), y = log(ipdfit1), color = pcv20pfz), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 5.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  geom_text(aes(x = 1, y = 5.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter", color = "#00BFC4") +
+  scale_x_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 6), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "F", x = "observed log_ipd", y = "") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = c(0.7,0.1), legend.title = element_blank())
+
+#save combined plots
+ggsave(here("output", "sfig12_sa_ipdPredictions.png"),
+       plot = (A | B | C | D | E | F), 
+       width = 24, height = 7, unit = "in", dpi = 300)
+
+#====================================================================
+#PREDICTIONS FROM MALAWI
 #====================================================================
 
+#2015-2019 samples summary
+mw_none = 1004 #no samples
+mw_nvt = 1110 #other non-vaccine samples
 
+#create ipd serotype dataset to match those of invasiveness
+#infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
+mw_ipda2015_pred <-
+  mw_cara2015 %>%
+  dplyr::select(yearc, st) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("prev" = "n") %>%
+  #dplyr::filter(st != "None") %>%
+  mutate(prev = if_else(str_length(st)>3 & str_length(st)<=7, prev/2, 
+                       if_else(str_length(st)>7, prev/3, prev))) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, prev) %>%
+  
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "23B1", "23B", st)) %>%
+  group_by(st) %>%
+  summarise(prev = sum(prev)) %>% 
+  ungroup() %>%
+  mutate(prev = if_else(st == "None", 2*prev, prev),#None was wrongly halved
+         prev = prev/sum(prev)) %>% 
+  
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_nvt, exp.inv),
+         exp.inv = if_else(st == "None", 0, exp.inv)) %>%
+  mutate(log.inv = log(exp.inv)) %>%
+  
+  #fill the NAs on serotype group
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6A|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"), #add 6A cross-protection
+         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"), #add 6A cross-protection
+         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
+         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+         ipd = prev*exp.inv,
+         scalex = 97/sum(ipd), #assume total ipd 97 based on reported IPD
+         ipd = scalex*ipd) %>% #scale ipd according
+  dplyr::select(st, prev, exp.inv, ipd, everything(), -log.inv)
 
+#====================================================================
+
+mw_ipda2015_obs <-
+  mw_ipda2015 %>%
+  dplyr::select(yearc, st) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd" = "n") %>%
+  mutate(ipd = if_else(str_length(st)>3 & str_length(st)<=7, ipd/2, 
+                        if_else(str_length(st)>7, ipd/3, ipd))) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd) %>%
+  
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  group_by(st) %>%
+  summarise(ipd = sum(ipd)) %>% 
+  ungroup()
+
+#====================================================================
+
+#clean obserrved pre-pcv13 IPD dataset introduction in Malawi
+mw_ipdb2011_pred <-
+  mw_ipdb2011 %>%
+  dplyr::select(yearc, st) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd" = "n") %>%
+  mutate(ipd = if_else(str_length(st)>3 & str_length(st)<=7, ipd/2, 
+                        if_else(str_length(st)>7, ipd/3, ipd))) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd) %>%
+  
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "23B1", "23B", st), 
+         st = if_else(st == "12FAB", "12F", st),) %>%
+  group_by(st) %>%
+  summarise(ipd = sum(ipd)) %>% 
+  ungroup() %>%
+  
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_nvt, exp.inv)) %>%
+  mutate(log.inv = log(exp.inv),
+         pcv13pfz = if_else(is.na(pcv13pfz), "NVT", pcv13pfz)) %>%
+  
+  #fill the PCV13 serotype group since only group with complete serotypes
+  mutate(prev = ipd/exp.inv,
+         scalex = 0.8/sum(prev), #assume total prevalence is up to 80%
+         prev = scalex*prev) %>% #scale prev according
+  dplyr::select(st, prev, exp.inv, ipd, pcv13pfz)

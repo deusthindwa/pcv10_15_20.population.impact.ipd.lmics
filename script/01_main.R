@@ -20,7 +20,7 @@ if(!require(pacman)) install.packages("pacman")
 
 #use pacman to load packages for analysis
 pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr", "MASS", "ggridges",  
-                        "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "missForest", "here"))
+                        "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "missForest", "MLmetrics", "here"))
 
 #set seed using a task call for entire session to ensure reproducibility
 addTaskCallback(function(...) {set.seed(1988); TRUE})
@@ -33,17 +33,26 @@ addTaskCallback(function(...) {set.seed(1988); TRUE})
 #load datasets for pneumococcal carriage and IPD for different countries
 source("script/02_manageData.R")
 
-#fit pre-PCV IPD (+ invasiveness) in Malawi and South Africa to infer pre-PCV carriage
-source("script/03_carriageInfer.R")
-
 #describe pneumococcal serotype carriage and IPD isolates
-source("script/04_descCarrIPD.R")
+source("script/03_descCarrIPD.R")
+
+#fit pre-PCV IPD (+ invasiveness) in Malawi and South Africa to infer pre-PCV carriage
+source("script/04_carrIPDinfer.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/05_predModels.R")
+source("script/05_ispredModels.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/06_evalModels.R")
+source("script/06_sapredModels.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/087_vaccineImpact.R")
+source("script/07_mwpredModels.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/08_brpredModels.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/09_vaccineImpact.R")
+
+#load datasets for pneumococcal carriage and IPD during PCV13 era
+source("script/10_sensModels.R")
