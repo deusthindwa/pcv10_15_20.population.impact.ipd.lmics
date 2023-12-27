@@ -629,24 +629,6 @@ mw_cara2015_obs <-
 
 #====================================================================
 
-#use cleaned observed pre-pcv13 IPD dataset intro in Malawi
-mw_carb2011_pred <-
-  mw_ipdb2011_obs %>%
-  
-  #join IPD serotypes with invasiveness
-  left_join(invasivenes) %>%
-  mutate(exp.inv = if_else(is.na(exp.inv), inv_pcv13pfz$wgt.inv[2], exp.inv)) %>%
-  mutate(log.inv = log(exp.inv),
-         pcv13pfz = if_else(is.na(pcv13pfz), "NVT", pcv13pfz)) %>%
-  
-  #fill the PCV13 serotype group since only group with complete serotypes
-  mutate(prev = ipd/exp.inv,
-         scalex = 0.45/sum(prev), #assume total prevalence is up to 45%, Ellen et al.
-         prev = scalex*prev) %>% #scale prev according
-  dplyr::select(st, prev, exp.inv, ipd, pcv13pfz)
-
-#====================================================================
-
 #2015-2019 samples summary
 mw_none = 1004 #no samples
 mw_nvt = 1110 #other non-vaccine samples
@@ -655,26 +637,7 @@ mw_nvt = 1110 #other non-vaccine samples
 #infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
 mw_ipda2015_pred <-
   mw_cara2015_obs %>%
-  # mw_cara2015 %>%
-  # dplyr::select(yearc, st) %>%
-  # group_by(st) %>%
-  # tally() %>%
-  # ungroup() %>%
-  # rename("prev" = "n") %>%
-  # #dplyr::filter(st != "None") %>%
-  # mutate(prev = if_else(str_length(st)>3 & str_length(st)<=7, prev/2, 
-  #                      if_else(str_length(st)>7, prev/3, prev))) %>% #multiple serotypes in a sample, split into half
-  # dplyr::select(st, prev) %>%
-  # 
-  # #split multiple serotypes with "/" into new rows
-  # tidyr::separate_rows(., st) %>%
-  # mutate(st = if_else(st == "23B1", "23B", st)) %>%
-  # group_by(st) %>%
-  # summarise(prev = sum(prev)) %>% 
-  # ungroup() %>%
-  # mutate(prev = if_else(st == "None", 2*prev, prev),#None was wrongly halved
-  #        prev = prev/sum(prev)) %>% 
-  # 
+
   #join IPD serotypes with invasiveness
   left_join(invasivenes) %>%
   mutate(exp.inv = if_else(is.na(exp.inv), inv_nvt, exp.inv),
@@ -689,47 +652,99 @@ mw_ipda2015_pred <-
          pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
          pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
          ipd = prev*exp.inv,
-         scalex = 97/sum(ipd), #assume total ipd 97 based on reported IPD
+         scalex = sum(mw_ipda2015_obs$ipd)/sum(ipd), # sum(mw_ipda2015_obs$ipd) = assume total ipd 97 based on reported IPD
          ipd = scalex*ipd) %>% #scale ipd according
   dplyr::select(st, prev, exp.inv, ipd, everything(), -log.inv)
 
 #====================================================================
 
+#use cleaned observed pre-pcv13 IPD dataset intro in Malawi
+mw_carb2011_pred <-
+  mw_ipdb2011_obs %>%
 
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_pcv13pfz$wgt.inv[2], exp.inv)) %>%
+  mutate(log.inv = log(exp.inv),
+         pcv13pfz = if_else(is.na(pcv13pfz), "NVT", pcv13pfz)) %>%
+
+  #fill the PCV13 serotype group since only group with complete serotypes
+  mutate(prev = ipd/exp.inv,
+         scalex = 0.45/sum(prev), #assume total prevalence is up to 45%, Ellen et al.
+         prev = scalex*prev) %>% #scale prev according
+  dplyr::select(st, prev, exp.inv, ipd, pcv13pfz)
 
 #====================================================================
 
 #generate ppotential pre-PCV carriage data
 #postpcvIPD = prepcvIPD * postpcvCarr / prepcvCarr
 #prepcvCarr = prepcvIPD * postpcvCarr / postpcvIPD
+# 
+# bind_cols(
+#   mw_ipdb2011_obs %>%
+#     mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>%
+#     group_by(pcv13pfz) %>%
+#     tally(ipd) %>%
+#     ungroup() %>%
+#     rename("ipd2011" = "n"),
+#   
+#   mw_ipda2015_obs %>%
+#     mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>%
+#     group_by(pcv13pfz) %>%
+#     tally(ipd) %>%
+#     ungroup() %>%
+#     rename("ipd2015" = "n") %>%
+#     dplyr::select(ipd2015),
+#   
+#   mw_cara2015_obs %>%
+#     mutate(pcv13pfz = if_else(st == "None", "None", 
+#                               if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"))) %>%
+#     group_by(pcv13pfz) %>%
+#     tally(prev) %>%
+#     ungroup() %>%
+#     rename("car2015" = "n") %>%
+#     dplyr::filter(pcv13pfz != "None") %>%
+#     dplyr::select(car2015)) %>%
+#   
+#   mutate(car2011 = ipd2011 * car2015 / ipd2015) %>%
+#   
+#   mutate(scalex = 0.70/sum(car2011), #assume total prevalence is up to 45%, Ellen et al.
+#          car2011 = scalex*car2011) #scale prev according
 
-bind_cols(
-  mw_ipdb2011_obs %>%
-    mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>%
-    group_by(pcv13pfz) %>%
-    tally(ipd) %>%
-    ungroup() %>%
-    rename("ipd2011" = "n"),
+A <-
+  left_join(
+    mw_ipda2015_obs %>%
+      mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+             st = if_else(pcv13pfz == "NVT", "NVT", st)) %>%
+      group_by(st) %>%
+      tally(ipd) %>% 
+      rename("n1"="n"),
+    
+    mw_ipda2015_pred %>%
+      mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
+             st = if_else(pcv13pfz == "NVT", "NVT", st)) %>%
+      group_by(st) %>%
+      tally(ipd) %>% 
+      rename("n2"="n")) %>%
+  mutate(r = abs(round((stats::cor(n1, n2, method = c("pearson")))[1], digits = 3)),
+         p = scientific(stats::cor.test(n1, n2)[3]$p.value),
+         r2 = abs(round(rsq(n1, n2), digits = 3))) %>%
   
-  mw_ipda2015_obs %>%
-    mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>%
-    group_by(pcv13pfz) %>%
-    tally(ipd) %>%
-    ungroup() %>%
-    rename("ipd2015" = "n") %>%
-    dplyr::select(ipd2015),
-  
-  mw_cara2015_obs %>%
-    mutate(pcv13pfz = if_else(st == "None", "None", 
-                              if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"))) %>%
-    group_by(pcv13pfz) %>%
-    tally(prev) %>%
-    ungroup() %>%
-    rename("car2015" = "n") %>%
-    dplyr::filter(pcv13pfz != "None") %>%
-    dplyr::select(car2015)) %>%
-  
-  mutate(car2011 = ipd2011 * car2015 / ipd2015) %>%
-  
-  mutate(scalex = 0.70/sum(car2011), #assume total prevalence is up to 45%, Ellen et al.
-         car2011 = scalex*car2011) #scale prev according
+  ggplot() +
+  geom_point(aes(x = log(n1), y = log(n2), color = st), stroke = 2, size = 0.5, shape = 4) +
+  geom_abline(linetype = "dashed") +
+  geom_text(aes(x = 1, y = 4.8, label = paste0("r = ", r[1])), size = 4, family = "American typewriter") +
+  geom_text(aes(x = 1, y = 4.5, label = paste0("p = ", p[1])), size = 4, family = "American typewriter") +
+  scale_x_continuous(limit = c(0, 5), breaks = seq(0, 6, 1)) +
+  scale_y_continuous(limit = c(0, 5), breaks = seq(0, 6, 1)) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  labs(title = "", x = "observed log_ip, 2015-2019", y = "predicted log_ipd, 2015-2019") +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
+  theme(legend.position = c(0.9,0.4), legend.title = element_blank()) +
+  theme(legend.key.size = unit(0.4, "cm"))
+
+
+#save combined plots
+ggsave(here("output", "sfig12_mw_ipdPredictions.png"),
+       plot = (A ), 
+       width = 8, height = 6, unit = "in", dpi = 300)

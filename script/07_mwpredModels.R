@@ -65,7 +65,7 @@ x <-
 
 #model-based IPD incidence rate ratio (using only prePCV13 carriage and IPD data)
 y1 <-
-  mw_ipdb2011_pred %>%
+  mw_carb2011_pred %>%
   mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "cVT", if_else(is.na(st), "None", "cNVT"))) %>%
   group_by(pcv13pfz) %>%
   tally(prev) %>%
