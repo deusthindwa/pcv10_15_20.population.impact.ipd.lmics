@@ -27,16 +27,15 @@ inv_pcv13pfz <- invasivenes %>% group_by(pcv13pfz) %>% mutate(wgt.inv = weighted
 inv_pcv10sii <- invasivenes %>% group_by(pcv10sii) %>% mutate(wgt.inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv10sii, wgt.inv)
 inv_pcv10gsk <- invasivenes %>% group_by(pcv10gsk) %>% mutate(wgt.inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv10gsk, wgt.inv)
 inv_pcv7pfz  <- invasivenes %>% group_by(pcv7pfz) %>% mutate(wgt.inv = weighted.mean(exp.inv)) %>% ungroup() %>% distinct(pcv7pfz, wgt.inv)
-inv_nvt = (inv_pcv20pfz$wgt.inv[2] + inv_pcv15mek$wgt.inv[2] + inv_pcv13pfz$wgt.inv[2] + inv_pcv10sii$wgt.inv[2] + inv_pcv10gsk$wgt.inv[2] + inv_pcv7pfz$wgt.inv[2])/6 #average NVT invasiveness
-inv_vt = (inv_pcv20pfz$wgt.inv[1] + inv_pcv15mek$wgt.inv[1] + inv_pcv13pfz$wgt.inv[1] + inv_pcv10sii$wgt.inv[1] + inv_pcv10gsk$wgt.inv[1] + inv_pcv7pfz$wgt.inv[1])/6 #average NVT invasiveness
-
+inv_vt = (inv_pcv20pfz$wgt.inv[1] + inv_pcv15mek$wgt.inv[1] + inv_pcv13pfz$wgt.inv[1] + inv_pcv10sii$wgt.inv[1] + inv_pcv10gsk$wgt.inv[1] + inv_pcv7pfz$wgt.inv[2])/6 #average VT invasiveness
+inv_nvt = (inv_pcv20pfz$wgt.inv[2] + inv_pcv15mek$wgt.inv[2] + inv_pcv13pfz$wgt.inv[2] + inv_pcv10sii$wgt.inv[2] + inv_pcv10gsk$wgt.inv[2] + inv_pcv7pfz$wgt.inv[1])/6 #average NVT invasiveness
 
 #====================================================================
 #PREDICTIONS FORM SOUTH AFRICA
 #====================================================================
 
 #create ipd serotype dataset to match those of invasiveness
-#infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
+#infer carriage data pre-pcv13 introduction in South Africa (carriage  <- ipd / invasiveness)
 sa_carb2009 <-
   sa_ipdb2009 %>%
   dplyr::select(yearc, st) %>%
@@ -73,7 +72,7 @@ sa_carb2009 <-
 
 #====================================================================
 
-#create carriage serotype dataset for pre PCV7 introduction
+#create carriage serotype dataset for pre PCV13 introduction
 sa_carb2011 <-
   sa_ipd %>%
   dplyr::filter(yearc >=2010, yearc <=2011) %>%
@@ -566,13 +565,48 @@ ggsave(here("output", "sfig12_sa_ipdPredictions.png"),
 #PREDICTIONS FROM MALAWI
 #====================================================================
 
-#2015-2019 samples summary
-mw_none = 1004 #no samples
-mw_nvt = 1110 #other non-vaccine samples
+mw_ipdb2011_obs <-
+  mw_ipdb2011 %>%
+  dplyr::select(yearc, st) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd" = "n") %>%
+  mutate(ipd = if_else(str_length(st)>3 & str_length(st)<=7, ipd/2, 
+                       if_else(str_length(st)>7, ipd/3, ipd))) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd, ipd) %>%
+  
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  mutate(st = if_else(st == "23B1", "23B", st), 
+         st = if_else(st == "12FAB", "12F", st),
+         ipd = if_else(st == "12F", 1, ipd)) %>%
+  group_by(st) %>%
+  summarise(ipd = sum(ipd)) %>% 
+  ungroup()
 
-#create ipd serotype dataset to match those of invasiveness
-#infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
-mw_ipda2015_pred <-
+#====================================================================
+
+mw_ipda2015_obs <-
+  mw_ipda2015 %>%
+  dplyr::select(yearc, st) %>%
+  group_by(st) %>%
+  tally() %>%
+  ungroup() %>%
+  rename("ipd" = "n") %>%
+  mutate(ipd = if_else(str_length(st)>3 & str_length(st)<=7, ipd/2, 
+                       if_else(str_length(st)>7, ipd/3, ipd))) %>% #multiple serotypes in a sample, split into half
+  dplyr::select(st, ipd) %>%
+  
+  #split multiple serotypes with "/" into new rows
+  tidyr::separate_rows(., st) %>%
+  group_by(st) %>%
+  summarise(ipd = sum(ipd)) %>% 
+  ungroup()
+
+#====================================================================
+
+mw_cara2015_obs <-
   mw_cara2015 %>%
   dplyr::select(yearc, st) %>%
   group_by(st) %>%
@@ -581,7 +615,7 @@ mw_ipda2015_pred <-
   rename("prev" = "n") %>%
   #dplyr::filter(st != "None") %>%
   mutate(prev = if_else(str_length(st)>3 & str_length(st)<=7, prev/2, 
-                       if_else(str_length(st)>7, prev/3, prev))) %>% #multiple serotypes in a sample, split into half
+                        if_else(str_length(st)>7, prev/3, prev))) %>% #multiple serotypes in a sample, split into half
   dplyr::select(st, prev) %>%
   
   #split multiple serotypes with "/" into new rows
@@ -591,8 +625,56 @@ mw_ipda2015_pred <-
   summarise(prev = sum(prev)) %>% 
   ungroup() %>%
   mutate(prev = if_else(st == "None", 2*prev, prev),#None was wrongly halved
-         prev = prev/sum(prev)) %>% 
+         prev = prev/sum(prev))
+
+#====================================================================
+
+#use cleaned observed pre-pcv13 IPD dataset intro in Malawi
+mw_carb2011_pred <-
+  mw_ipdb2011_obs %>%
   
+  #join IPD serotypes with invasiveness
+  left_join(invasivenes) %>%
+  mutate(exp.inv = if_else(is.na(exp.inv), inv_pcv13pfz$wgt.inv[2], exp.inv)) %>%
+  mutate(log.inv = log(exp.inv),
+         pcv13pfz = if_else(is.na(pcv13pfz), "NVT", pcv13pfz)) %>%
+  
+  #fill the PCV13 serotype group since only group with complete serotypes
+  mutate(prev = ipd/exp.inv,
+         scalex = 0.45/sum(prev), #assume total prevalence is up to 45%, Ellen et al.
+         prev = scalex*prev) %>% #scale prev according
+  dplyr::select(st, prev, exp.inv, ipd, pcv13pfz)
+
+#====================================================================
+
+#2015-2019 samples summary
+mw_none = 1004 #no samples
+mw_nvt = 1110 #other non-vaccine samples
+
+#create ipd serotype dataset to match those of invasiveness
+#infer carriage data pre-pcv13 introduction in south africa (carriage  <- ipd / invasiveness)
+mw_ipda2015_pred <-
+  mw_cara2015_obs %>%
+  # mw_cara2015 %>%
+  # dplyr::select(yearc, st) %>%
+  # group_by(st) %>%
+  # tally() %>%
+  # ungroup() %>%
+  # rename("prev" = "n") %>%
+  # #dplyr::filter(st != "None") %>%
+  # mutate(prev = if_else(str_length(st)>3 & str_length(st)<=7, prev/2, 
+  #                      if_else(str_length(st)>7, prev/3, prev))) %>% #multiple serotypes in a sample, split into half
+  # dplyr::select(st, prev) %>%
+  # 
+  # #split multiple serotypes with "/" into new rows
+  # tidyr::separate_rows(., st) %>%
+  # mutate(st = if_else(st == "23B1", "23B", st)) %>%
+  # group_by(st) %>%
+  # summarise(prev = sum(prev)) %>% 
+  # ungroup() %>%
+  # mutate(prev = if_else(st == "None", 2*prev, prev),#None was wrongly halved
+  #        prev = prev/sum(prev)) %>% 
+  # 
   #join IPD serotypes with invasiveness
   left_join(invasivenes) %>%
   mutate(exp.inv = if_else(is.na(exp.inv), inv_nvt, exp.inv),
@@ -613,53 +695,41 @@ mw_ipda2015_pred <-
 
 #====================================================================
 
-mw_ipda2015_obs <-
-  mw_ipda2015 %>%
-  dplyr::select(yearc, st) %>%
-  group_by(st) %>%
-  tally() %>%
-  ungroup() %>%
-  rename("ipd" = "n") %>%
-  mutate(ipd = if_else(str_length(st)>3 & str_length(st)<=7, ipd/2, 
-                        if_else(str_length(st)>7, ipd/3, ipd))) %>% #multiple serotypes in a sample, split into half
-  dplyr::select(st, ipd) %>%
-  
-  #split multiple serotypes with "/" into new rows
-  tidyr::separate_rows(., st) %>%
-  group_by(st) %>%
-  summarise(ipd = sum(ipd)) %>% 
-  ungroup()
+
 
 #====================================================================
 
-#clean obserrved pre-pcv13 IPD dataset introduction in Malawi
-mw_ipdb2011_pred <-
-  mw_ipdb2011 %>%
-  dplyr::select(yearc, st) %>%
-  group_by(st) %>%
-  tally() %>%
-  ungroup() %>%
-  rename("ipd" = "n") %>%
-  mutate(ipd = if_else(str_length(st)>3 & str_length(st)<=7, ipd/2, 
-                        if_else(str_length(st)>7, ipd/3, ipd))) %>% #multiple serotypes in a sample, split into half
-  dplyr::select(st, ipd) %>%
+#generate ppotential pre-PCV carriage data
+#postpcvIPD = prepcvIPD * postpcvCarr / prepcvCarr
+#prepcvCarr = prepcvIPD * postpcvCarr / postpcvIPD
+
+bind_cols(
+  mw_ipdb2011_obs %>%
+    mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>%
+    group_by(pcv13pfz) %>%
+    tally(ipd) %>%
+    ungroup() %>%
+    rename("ipd2011" = "n"),
   
-  #split multiple serotypes with "/" into new rows
-  tidyr::separate_rows(., st) %>%
-  mutate(st = if_else(st == "23B1", "23B", st), 
-         st = if_else(st == "12FAB", "12F", st),) %>%
-  group_by(st) %>%
-  summarise(ipd = sum(ipd)) %>% 
-  ungroup() %>%
+  mw_ipda2015_obs %>%
+    mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT")) %>%
+    group_by(pcv13pfz) %>%
+    tally(ipd) %>%
+    ungroup() %>%
+    rename("ipd2015" = "n") %>%
+    dplyr::select(ipd2015),
   
-  #join IPD serotypes with invasiveness
-  left_join(invasivenes) %>%
-  mutate(exp.inv = if_else(is.na(exp.inv), inv_nvt, exp.inv)) %>%
-  mutate(log.inv = log(exp.inv),
-         pcv13pfz = if_else(is.na(pcv13pfz), "NVT", pcv13pfz)) %>%
+  mw_cara2015_obs %>%
+    mutate(pcv13pfz = if_else(st == "None", "None", 
+                              if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"))) %>%
+    group_by(pcv13pfz) %>%
+    tally(prev) %>%
+    ungroup() %>%
+    rename("car2015" = "n") %>%
+    dplyr::filter(pcv13pfz != "None") %>%
+    dplyr::select(car2015)) %>%
   
-  #fill the PCV13 serotype group since only group with complete serotypes
-  mutate(prev = ipd/exp.inv,
-         scalex = 0.8/sum(prev), #assume total prevalence is up to 80%
-         prev = scalex*prev) %>% #scale prev according
-  dplyr::select(st, prev, exp.inv, ipd, pcv13pfz)
+  mutate(car2011 = ipd2011 * car2015 / ipd2015) %>%
+  
+  mutate(scalex = 0.70/sum(car2011), #assume total prevalence is up to 45%, Ellen et al.
+         car2011 = scalex*car2011) #scale prev according

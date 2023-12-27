@@ -54,10 +54,10 @@ C <-
   geom_point(shape = 4, stroke = 2, size = 3) + 
   geom_errorbar(aes(xmin = irr_low_obs, xmax = irr_high_obs), width = 0, size = 1, alpha = 0.5) +
   geom_errorbar(aes(ymin = irr_low_predba, ymax = irr_high_predba), width = 0, size = 1, alpha = 0.5) +
-  geom_text(aes(x = 0.8, y = 0.25, label = paste0("SR = ", srp[1])), color = "#F8766D", size = 5, fontface = "bold", family = "American typewriter") +
-  geom_text(aes(x = 0.8, y = 0.2, label = paste0("SR = ", srp[2])), color = "#7CAE00", size = 5, fontface = "bold", family = "American typewriter") +
-  geom_text(aes(x = 0.8, y = 0.15, label = paste0("SR = ", srp[3])), color = "#619CFF", size = 5, fontface = "bold", family = "American typewriter") +
-  geom_text(aes(x = 0.8, y = 0.1, label = paste0("SR = ", 0)), color = "#C77CFF", size = 5, fontface = "bold", family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.35, label = paste0("SR = ", srp[1])), color = "#F8766D", size = 4, fontface = "bold", family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.25, label = paste0("SR = ", srp[2])), color = "#7CAE00", size = 4, fontface = "bold", family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.15, label = paste0("SR = ", srp[3])), color = "#619CFF", size = 4, fontface = "bold", family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.05, label = paste0("SR = ", 0)), color = "#C77CFF", size = 4, fontface = "bold", family = "American typewriter") +
   geom_abline(linetype = "dashed") +
   #coord_cartesian(xlim = c(0, 1)) +
   scale_x_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 

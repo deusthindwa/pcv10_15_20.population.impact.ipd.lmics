@@ -38,7 +38,7 @@ bs_samples = 10000 #number of bootstrap samples
 
 #observed IPD incidence rate ratio for PCV13 serotypes (postPCV13 vs prePCV13)
 x1 <-
-  mw_ipdb2011_pred %>%
+  mw_ipdb2011_obs %>%
   mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "dVT1", "dNVT1")) %>%
   group_by(pcv13pfz) %>%
   tally(ipd) %>%
@@ -46,7 +46,7 @@ x1 <-
   ungroup() %>%
   mutate(dTot1 = sum(dNVT1, dVT1)) %>%
   mutate(dTot1 = dTot1/fuy1, dNVT1 = dNVT1/fuy1, dVT1 = dVT1/fuy1)
-   
+
 x2 <-
   mw_ipda2015_obs %>%
   mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "dVT2", "dNVT2")) %>%
@@ -71,11 +71,11 @@ y1 <-
   tally(prev) %>%
   pivot_wider(names_from = pcv13pfz, values_from = n) %>%
   ungroup() %>%
-  dplyr::mutate(cNVT = cNVT*1000, cVT = cVT*1000, None = (1000-cNVT-cVT), cTot = sum(cNVT, cVT, None)) %>% #imaginery populaton of 1000 individuals
+  dplyr::mutate(cNVT = cNVT*1000, cVT = cVT*1000*3.5, None = (1000-cNVT-cVT), cTot = sum(cNVT, cVT, None)) %>% #imaginary population of 1000 individuals (cVT set to be equal to NVT due to lack of data in Malawi)
   dplyr::mutate(None = None/fuy1, cNVT = cNVT/fuy1, cVT = cVT/fuy1, cTot = cTot/fuy1) 
 
 y2 <-
-  mw_ipdb2011_pred %>%
+  mw_ipdb2011_obs %>%
   mutate(pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "dVT", "dNVT")) %>%
   group_by(pcv13pfz) %>%
   tally(ipd) %>%
