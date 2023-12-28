@@ -183,7 +183,8 @@ mw_pcvsamples <-
          country = "Malawi")
 
 #summary preventable disease estimates
-mw_pcvsamples %>% 
+mw_impactEst <-
+  mw_pcvsamples %>% 
   group_by(pcv) %>%
   summarise(irr1M = 1-quantile(irr1, 0.500),#flip the 95%CI koz of subtracting from 1
             irr1L = 1-quantile(irr1, 0.975),

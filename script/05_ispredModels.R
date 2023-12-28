@@ -183,7 +183,8 @@ is_pcvsamples <-
          country = "Israel")
 
 #summary preventable disease estimates
-is_pcvsamples %>% 
+is_impactEst <-
+  is_pcvsamples %>% 
   group_by(pcv) %>%
   summarise(irr1M = 1-quantile(irr1, 0.500),#flip the 95%CI koz of subtracting from 1
             irr1L = 1-quantile(irr1, 0.975),

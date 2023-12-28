@@ -191,7 +191,8 @@ sa_pcvsamples <-
          country = "South Africa")
 
 #summary preventable disease estimates
-sa_pcvsamples %>% 
+sa_impactEst <-
+  sa_pcvsamples %>% 
   group_by(pcv) %>%
   summarise(irr1M = 1-quantile(irr1, 0.500),#flip the 95%CI koz of subtracting from 1
             irr1L = 1-quantile(irr1, 0.975),
@@ -202,3 +203,4 @@ sa_pcvsamples %>%
             irr3M = 1-quantile(irr3, 0.500),
             irr3L = 1-quantile(irr3, 0.975),
             irr3U = 1-quantile(irr3, 0.025))
+
