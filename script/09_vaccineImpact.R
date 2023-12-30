@@ -31,7 +31,7 @@ A <-
   scale_x_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 
   scale_y_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 
   theme_bw(base_size = 16, base_family = "American typewriter") +
-  labs(title = "", x = "observed IRR", y = "Predicted IRR (SR = 0)") +
+  labs(title = "A", x = "observed IRR", y = "Predicted IRR (SR = 0)") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2), legend.position = "none")
 
 B <-
@@ -45,7 +45,7 @@ B <-
   scale_x_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 
   scale_y_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 
   theme_bw(base_size = 16, base_family = "American typewriter") +
-  labs(title = "", x = "observed IRR", y = "Predicted IRR (SR = 1)") +
+  labs(title = "B", x = "observed IRR", y = "Predicted IRR (SR = 1)") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2), legend.position = "none")
 
 C <-
@@ -63,22 +63,46 @@ C <-
   scale_x_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 
   scale_y_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
-  labs(title = "", x = "observed IRR", y = "Predicted IRR") +
+  labs(title = "C", x = "observed IRR", y = "Predicted IRR") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2), legend.position = "right")
 
 #save combined plots
-ggsave(here("output", "sfig11_obspred.png"),
+ggsave(here("output", "fig2_obspredIRR.png"),
        plot = (A | B |C), 
        width = 20, height = 6, unit = "in", dpi = 300)
-  
+
 #====================================================================
 
 #plot of vaccine preventable IPD distributions
-C <-
+D <-
+  bind_rows(is_pcvsamples, sa_pcvsamples, mw_pcvsamples) %>%
+  ggplot() +
+  #geom_density(aes(x = 1-irr1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
+  geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
+  #geom_density(aes(x = 1-irr3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.3) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_grid(country ~ pcv, scales = "free_x") +
+  scale_fill_manual(name = "scenarios of serotype\nreplacement (SR)", values = c("no SR" = "blue", "baseline SR" = "red", "complete SR" = "green")) +
+  labs(title = "", x = "vaccine impact (proportion of preventable IPD)", y = "density") + 
+  theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14), legend.key.size = unit(1.2,"cm")) +
+  theme(strip.text.x = element_text(size = 26), strip.text.y = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "fig3_vaccineimpact.png"),
+       plot = (D), 
+       width = 24, height = 12, unit = "in", dpi = 300)
+
+#====================================================================
+
+
+#plot of vaccine preventable IPD distributions
+E <-
   bind_rows(is_pcvsamples, sa_pcvsamples, mw_pcvsamples) %>%
   ggplot() +
   geom_density(aes(x = 1-irr1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
-  geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
+  #geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
   geom_density(aes(x = 1-irr3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.3) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -90,11 +114,6 @@ C <-
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #save combined plots
-ggsave(here("output", "sfig8_vaximpact.png"),
-       plot = (C), 
+ggsave(here("output", "fig8_vaximpact.png"),
+       plot = (E), 
        width = 24, height = 12, unit = "in", dpi = 300)
-
-#====================================================================
-
-
-

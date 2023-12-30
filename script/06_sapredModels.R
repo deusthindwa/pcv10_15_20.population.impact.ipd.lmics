@@ -203,4 +203,3 @@ sa_impactEst <-
             irr3M = 1-quantile(irr3, 0.500),
             irr3L = 1-quantile(irr3, 0.975),
             irr3U = 1-quantile(irr3, 0.025))
-
