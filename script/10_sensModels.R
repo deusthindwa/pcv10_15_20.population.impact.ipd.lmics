@@ -97,12 +97,11 @@ A <-
   ggplot() +
   geom_tile(aes(x = rVT, y = stR, fill = (1-irr)), linejoin = "bevel") +
   scale_fill_gradientn("z", colours = terrain.colors(100, rev = TRUE, alpha = 0.8)) +
-  #geom_point(aes(x = 0, y = err_DS$sr_min[1]), shape = 4, size = 4, stroke = 2) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
   facet_grid(country ~ pcv) +
   labs(title = "", x = "proportion of residual VT carriage in a mature PCV era", y = "proportion of NVT carriage replacement") +
   theme(axis.text.x = element_text(size = 14), axis.text.y = element_text(size = 14)) +
-  guides(fill = guide_legend(title = "preventable \n VT IPD")) +
+  guides(fill = guide_legend(title = "preventable \n    VT IPD")) +
   theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14), legend.key.size = unit(1.2,"cm")) +
   theme(strip.text.x = element_text(size = 26), strip.text.y = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))

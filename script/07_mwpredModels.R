@@ -126,7 +126,7 @@ y %>% dplyr::select(irr3) %>% mutate(sr = "predicted IRR, complete SR", country 
 #compute expected pcv impact with a prediction model
 pcv_carr <-
   bind_cols(
-    mw_ipda2015_pred %>% 
+      mw_cara2015_obs %>%
       mutate(pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),
              pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),
              pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),

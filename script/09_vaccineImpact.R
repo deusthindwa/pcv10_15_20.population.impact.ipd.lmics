@@ -54,12 +54,12 @@ C <-
   geom_point(shape = 4, stroke = 2, size = 3) + 
   geom_errorbar(aes(xmin = irr_low_obs, xmax = irr_high_obs), width = 0, size = 1, alpha = 0.5) +
   geom_errorbar(aes(ymin = irr_low_predba, ymax = irr_high_predba), width = 0, size = 1, alpha = 0.5) +
-  geom_text(aes(x = 1.2, y = 0.35, label = paste0("SR = ", srp[1])), color = "#F8766D", size = 4, fontface = "bold", family = "American typewriter") +
-  geom_text(aes(x = 1.2, y = 0.25, label = paste0("SR = ", srp[2])), color = "#7CAE00", size = 4, fontface = "bold", family = "American typewriter") +
-  geom_text(aes(x = 1.2, y = 0.15, label = paste0("SR = ", srp[3])), color = "#619CFF", size = 4, fontface = "bold", family = "American typewriter") +
-  geom_text(aes(x = 1.2, y = 0.05, label = paste0("SR = ", 0)), color = "#C77CFF", size = 4, fontface = "bold", family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.45, label = paste0("Baseline serotype\nreplacement (SR)")), color = "black", size = 4, family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.29, label = paste0("SR = ", srp[1])), color = "#F8766D", size = 4, family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.22, label = paste0("SR = ", srp[2])), color = "#7CAE00", size = 4, family = "American typewriter") +
+  geom_text(aes(x = 1.2, y = 0.15, label = paste0("SR = ", srp[3])), color = "#619CFF", size = 4, family = "American typewriter") +
+  #geom_text(aes(x = 1.2, y = 0.05, label = paste0("SR = ", 0)), color = "#C77CFF", size = 4, fontface = "bold", family = "American typewriter") +
   geom_abline(linetype = "dashed") +
-  #coord_cartesian(xlim = c(0, 1)) +
   scale_x_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) + 
   scale_y_continuous(limit = c(0, 1.5), breaks = seq(0, 1.5, 0.4)) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
@@ -114,6 +114,6 @@ E <-
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
 
 #save combined plots
-ggsave(here("output", "fig8_vaximpact.png"),
+ggsave(here("output", "sfig8_vaximpact.png"),
        plot = (E), 
        width = 24, height = 12, unit = "in", dpi = 300)

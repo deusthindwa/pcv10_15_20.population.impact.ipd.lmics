@@ -283,7 +283,7 @@ F2 <-
   theme(plot.title = element_text(hjust = 0.1, vjust = -10), axis.text.x = element_text(size = 16), axis.text.y = element_text(size = 0))
 
 #save combined plots
-ggsave(here("output", "sfig9_carstDist.png"),
+ggsave(here("output", "sfig3_carstcorr.png"),
        plot = (A1 | B1 | C1 | D1 | E1 | F1) / (A2 | B2 | C2 | D2 | E2 | F2), 
        width = 26, height = 14, unit = "in", dpi = 300)
 
@@ -355,9 +355,9 @@ A <-
   facet_grid(.~ factor(period, levels = c("pre-PCV", "post-PCV")))
 
 #save combined plots
-ggsave(here("output", "sfig10_carsgDist.png"),
+ggsave(here("output", "sfig4_inferredsgcar.png"),
        plot = (A), 
-       width = 20, height = 7, unit = "in", dpi = 300)
+       width = 18, height = 9, unit = "in", dpi = 300)
 
 #====================================================================
 
@@ -557,7 +557,7 @@ F <-
   theme(legend.position = c(0.7,0.1), legend.title = element_blank())
 
 #save combined plots
-ggsave(here("output", "sfig12_sa_ipdPredictions.png"),
+ggsave(here("output", "sfig5_car_predValidation.png"),
        plot = (A | B | C | D | E | F), 
        width = 24, height = 7, unit = "in", dpi = 300)
 
@@ -613,9 +613,9 @@ mw_cara2015_obs <-
   tally() %>%
   ungroup() %>%
   rename("prev" = "n") %>%
-  #dplyr::filter(st != "None") %>%
-  mutate(prev = if_else(str_length(st)>3 & str_length(st)<=7, prev/2, 
-                        if_else(str_length(st)>7, prev/3, prev))) %>% #multiple serotypes in a sample, split into half
+  mutate(prev = if_else(st == "None", prev,
+                        if_else(str_length(st)>3 & str_length(st)<=7, prev/2, 
+                                if_else(str_length(st)>7, prev/3, prev)))) %>% #multiple serotypes in a sample, split into half
   dplyr::select(st, prev) %>%
   
   #split multiple serotypes with "/" into new rows
@@ -624,8 +624,7 @@ mw_cara2015_obs <-
   group_by(st) %>%
   summarise(prev = sum(prev)) %>% 
   ungroup() %>%
-  mutate(prev = if_else(st == "None", 2*prev, prev),#None was wrongly halved
-         prev = prev/sum(prev))
+  mutate(prev = prev/sum(prev))
 
 #====================================================================
 
@@ -645,12 +644,12 @@ mw_ipda2015_pred <-
   mutate(log.inv = log(exp.inv)) %>%
   
   #fill the NAs on serotype group
-  mutate(pcv7pfz = if_else(grepl("\\b(4|6A|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", "NVT"), #add 6A cross-protection
-         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", "NVT"),
-         pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", "NVT"), #add 6A cross-protection
-         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", "NVT"),
-         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", "NVT"),
-         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", "NVT"),
+  mutate(pcv7pfz = if_else(grepl("\\b(4|6A|6B|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV7", if_else(st == "None", NA_character_, "NVT")), #add 6A cross-protection
+         pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii", if_else(st == "None", NA_character_, "NVT")),
+         pcv10gsk = if_else(grepl("\\b(1|4|5|6A|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk", if_else(st == "None", NA_character_, "NVT")), #add 6A cross-protection
+         pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13", if_else(st == "None", NA_character_, "NVT")),
+         pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15", if_else(st == "None", NA_character_, "NVT")),
+         pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20", if_else(st == "None", NA_character_, "NVT")),
          ipd = prev*exp.inv,
          scalex = sum(mw_ipda2015_obs$ipd)/sum(ipd), # sum(mw_ipda2015_obs$ipd) = assume total ipd 97 based on reported IPD
          ipd = scalex*ipd) %>% #scale ipd according
@@ -738,13 +737,86 @@ A <-
   scale_x_continuous(limit = c(0, 5), breaks = seq(0, 6, 1)) +
   scale_y_continuous(limit = c(0, 5), breaks = seq(0, 6, 1)) +
   theme_bw(base_size = 16, base_family = "American typewriter") +
-  labs(title = "", x = "observed log_ip, 2015-2019", y = "predicted log_ipd, 2015-2019") +
+  labs(title = "", x = "observed PCV13 VT log_ipd, 2015-2019", y = "predicted PCV13 VT log_ipd, 2015-2019") +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2)) +
   theme(legend.position = c(0.9,0.4), legend.title = element_blank()) +
   theme(legend.key.size = unit(0.4, "cm"))
 
 
 #save combined plots
-ggsave(here("output", "sfig12_mw_ipdPredictions.png"),
+ggsave(here("output", "sfig6_ipd_predValidation.png"),
        plot = (A ), 
        width = 8, height = 6, unit = "in", dpi = 300)
+
+#====================================================================
+#CONSOLIDATED PLOT
+#====================================================================
+
+consol <-
+  bind_rows(
+    is_ipda2013 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "post-PCV"),
+    is_ipdb2009 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "pre-PCV"),
+    sa_ipda2015 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "post-PCV"),
+    sa_ipdb2009 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "pre-PCV"),
+    mw_ipda2015_pred %>% mutate(country = "Malawi") %>% dplyr::select(st, country, ipd) %>% group_by(country, st) %>% tally(ipd) %>% mutate(phase = "post-PCV"),
+    mw_ipdb2011_obs %>% mutate(country = "Malawi") %>% dplyr::select(st, country, ipd) %>% group_by(country, st) %>% tally(ipd) %>% mutate(phase = "pre-PCV")) %>%
+  
+  dplyr::mutate(pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20-VT", "PCV20-NVT"),
+                pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15-VT", "PCV15-NVT"),
+                pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13-VT", "PCV13-NVT"),
+                pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii-VT", "PCV10-sii-NVT"),
+                pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk-VT", "PCV10-gsk-NVT"))
+
+bind_rows(
+consol %>%
+  group_by(country, phase, pcv20pfz) %>%
+  tally(n) %>%
+  mutate(p = n/sum(n), fct = "PCV20") %>%
+  rename("sg" = "pcv20pfz") %>%
+  mutate(p = n/sum(n)),
+
+consol %>%
+  group_by(country, phase, pcv15mek) %>%
+  tally(n) %>%
+  mutate(p = n/sum(n), fct = "PCV15") %>%
+  rename("sg" = "pcv15mek") %>%
+  mutate(p = n/sum(n)),
+
+consol %>%
+  group_by(country, phase, pcv13pfz) %>%
+  tally(n) %>%
+  mutate(p = n/sum(n), fct = "PCV13") %>%
+  rename("sg" = "pcv13pfz") %>%
+  mutate(p = n/sum(n)),
+
+consol %>%
+  group_by(country, phase, pcv10sii) %>%
+  tally(n) %>%
+  mutate(p = n/sum(n), fct = "PCV10-sii") %>%
+  rename("sg" = "pcv10sii") %>%
+  mutate(p = n/sum(n)),
+
+consol %>%
+  group_by(country, phase, pcv10gsk) %>%
+  tally(n) %>%
+  mutate(p = n/sum(n), fct = "PCV10-gsk") %>%
+  rename("sg" = "pcv10gsk") %>%
+  mutate(p = n/sum(n))) %>%
+  
+  mutate(samples = "IPD") %>%
+
+  ggplot() +
+  geom_col(aes(x = sg, y = p, fill = sg), color = "black", size = 0.5) +
+  theme_bw(base_size = 16, base_family = "Lato") +
+  labs(title = "", x = "serotype group", y = "proportion of observed/inferred IPD") +
+  ggh4x::facet_nested(samples ~ country + phase, scales = "free_y") +
+  theme(axis.text.x=element_blank()) +
+  theme(strip.text.x = element_text(size = 20), strip.text.y = element_text(size = 20), strip.background = element_rect(fill = "white")) +
+  guides(color = guide_legend(title = "")) +
+  theme(legend.text = element_text(size = 12), legend.position = "bottom", legend.title = element_text(size = 12)) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "fig1_ipdsgDist.png"),
+       plot = (D),
+       width = 16, height = 9, unit = "in", dpi = 300)
