@@ -76,6 +76,7 @@ ggsave(here("output", "fig2_obspredIRR.png"),
 #plot of vaccine preventable IPD distributions
 D <-
   bind_rows(is_pcvsamples, sa_pcvsamples, mw_pcvsamples) %>%
+  dplyr::filter(pcv != "pcv13pfz") %>%
   ggplot() +
   #geom_density(aes(x = 1-irr1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
   geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
@@ -100,6 +101,7 @@ ggsave(here("output", "fig3_vaccineimpact.png"),
 #plot of vaccine preventable IPD distributions
 E <-
   bind_rows(is_pcvsamples, sa_pcvsamples, mw_pcvsamples) %>%
+  dplyr::filter(pcv != "pcv13pfz") %>%
   ggplot() +
   geom_density(aes(x = 1-irr1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
   #geom_density(aes(x = 1-irr2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +

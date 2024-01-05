@@ -120,7 +120,7 @@ y %>% dplyr::select(irr2) %>% mutate(sr = "predicted IRR, baseline SR", country 
 y %>% dplyr::select(irr3) %>% mutate(sr = "predicted IRR, complete SR", country = "Malawi") %>% rename("irr" = "irr3"))
 
 #====================================================================
-#MODEL VALIDATION
+#MODEL PREDICTIONS
 #====================================================================
 
 #compute expected pcv impact with a prediction model
@@ -129,9 +129,10 @@ pcv_carr <-
       mw_cara2015_obs %>%
       mutate(pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),
              pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),
+             pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),
              pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT")),
              pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "cVT", if_else(st == "None", "None", "cNVT"))) %>%
-      pivot_longer(names_to = "pcv", cols = c(pcv10sii, pcv10gsk, pcv15mek, pcv20pfz)) %>%
+      pivot_longer(names_to = "pcv", cols = c(pcv10sii, pcv10gsk, pcv13pfz, pcv15mek, pcv20pfz)) %>%
       group_by(pcv, value) %>%
       tally(prev) %>%
       pivot_wider(names_from = value, values_from = n) %>%
@@ -143,9 +144,10 @@ pcv_carr <-
     mw_ipda2015_pred %>%
       mutate(pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "dVT", "dNVT"),
              pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "dVT", "dNVT"),
+             pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "dVT", "dNVT"),
              pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "dVT", "dNVT"),
              pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "dVT", "dNVT")) %>%
-      pivot_longer(names_to = "pcv", cols = c(pcv10sii, pcv10gsk, pcv15mek, pcv20pfz)) %>%
+      pivot_longer(names_to = "pcv", cols = c(pcv10sii, pcv10gsk, pcv13pfz, pcv15mek, pcv20pfz)) %>%
       ungroup() %>%
       group_by(pcv, value) %>%
       tally(ipd) %>%
@@ -157,14 +159,15 @@ pcv_carr <-
       dplyr::select(everything(), -pcv))
 
 #generate random samples around carriage and disease mean values
-mw_pcvsamples <- tibble(pcv = c(rep("pcv10gsk", bs_samples), 
-                              rep("pcv10sii", bs_samples), 
-                              rep("pcv15mek", bs_samples), 
+mw_pcvsamples <- tibble(pcv = c(rep("pcv10gsk", bs_samples),
+                              rep("pcv10sii", bs_samples),
+                              rep("pcv13pfz", bs_samples),
+                              rep("pcv15mek", bs_samples),
                               rep("pcv20pfz", bs_samples)),
                       cVT = NA, cNVT = NA, dVT = NA, dNVT = NA)
 k = 1
 l = bs_samples
-for (i in 1:4) {
+for (i in 1:nrow(pcv_carr)) {
   for (j in k:l) {
     mw_pcvsamples$cVT[j] = mean(rbinom(sum(pcv_carr$cTot[i]), p = pcv_carr$pcVT[i], size = 1))
     mw_pcvsamples$cNVT[j] = mean(rbinom(sum(pcv_carr$cTot[i]), p = pcv_carr$pcNVT[i], size = 1))
