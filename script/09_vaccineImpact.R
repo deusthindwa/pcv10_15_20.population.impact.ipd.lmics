@@ -95,9 +95,6 @@ ggsave(here("output", "fig3_vaccineimpact.png"),
        plot = (D), 
        width = 24, height = 12, unit = "in", dpi = 300)
 
-#====================================================================
-
-
 #plot of vaccine preventable IPD distributions
 E <-
   bind_rows(is_pcvsamples, sa_pcvsamples, mw_pcvsamples) %>%
@@ -118,4 +115,51 @@ E <-
 #save combined plots
 ggsave(here("output", "sfig8_vaximpact.png"),
        plot = (E), 
+       width = 24, height = 12, unit = "in", dpi = 300)
+
+
+#====================================================================
+
+#plot of vaccine preventable IPD distributions
+F <-
+  bind_rows(is_netImpact, sa_netImpact, mw_netImpact) %>%
+  dplyr::filter(pcv != "pcv13pfz") %>%
+  ggplot() +
+  #geom_density(aes(x = imp1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
+  geom_density(aes(x = imp2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
+  #geom_density(aes(x = imp3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.3) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_grid(country ~ pcv, scales = "free_x") +
+  scale_fill_manual(name = "scenarios of serotype\nreplacement (SR)", values = c("no SR" = "blue", "baseline SR" = "red", "complete SR" = "green")) +
+  labs(title = "", x = "vaccine impact (proportion of preventable IPD)", y = "density") + 
+  theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14), legend.key.size = unit(1.2,"cm")) +
+  theme(strip.text.x = element_text(size = 26), strip.text.y = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "fig3_vaccineimpact.png"),
+       plot = (F), 
+       width = 24, height = 12, unit = "in", dpi = 300)
+
+#plot of vaccine preventable IPD distributions
+H <-
+  bind_rows(is_netImpact, sa_netImpact, mw_netImpact) %>%
+  dplyr::filter(pcv != "pcv13pfz") %>%
+  ggplot() +
+  geom_density(aes(x = imp1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
+  #geom_density(aes(x = imp2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
+  geom_density(aes(x = imp3, group = pcv, fill = "complete SR"), size = 0.6, alpha = 0.3) +
+  theme_bw(base_size = 16, base_family = "American typewriter") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_grid(country ~ pcv, scales = "free_x") +
+  scale_fill_manual(name = "scenarios of serotype\nreplacement (SR)", values = c("no SR" = "blue", "baseline SR" = "red", "complete SR" = "green")) +
+  labs(title = "", x = "vaccine impact (proportion of preventable IPD)", y = "density") + 
+  theme(legend.text = element_text(size = 14), legend.position = "right", legend.title = element_text(size = 14), legend.key.size = unit(1.2,"cm")) +
+  theme(strip.text.x = element_text(size = 26), strip.text.y = element_text(size = 26), strip.background = element_rect(fill = "gray90")) +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+
+#save combined plots
+ggsave(here("output", "sfig8_vaximpact.png"),
+       plot = (H), 
        width = 24, height = 12, unit = "in", dpi = 300)

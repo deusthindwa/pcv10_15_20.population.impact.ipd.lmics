@@ -198,3 +198,77 @@ mw_impactEst <-
             irr3M = 1-quantile(irr3, 0.500),
             irr3L = 1-quantile(irr3, 0.975),
             irr3U = 1-quantile(irr3, 0.025))
+
+#next benefit of next genberation PCV over pcv13
+mw_netImpact <-
+  bind_rows(
+    bind_cols(
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv20pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3),
+      
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv13pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3) %>%
+        dplyr::select(irr1, irr2, irr3) %>%
+        dplyr::rename("irr1x" = "irr1", "irr2x" = "irr2", "irr3x" = "irr3")),
+    
+    bind_cols(
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv15mek") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3),
+      
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv13pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3) %>%
+        dplyr::select(irr1, irr2, irr3) %>%
+        dplyr::rename("irr1x" = "irr1", "irr2x" = "irr2", "irr3x" = "irr3")),
+    
+    bind_cols(
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv13pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3),
+      
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv13pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3) %>%
+        dplyr::select(irr1, irr2, irr3) %>%
+        dplyr::rename("irr1x" = "irr1", "irr2x" = "irr2", "irr3x" = "irr3")),
+    
+    bind_cols(
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv10sii") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3),
+      
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv13pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3) %>%
+        dplyr::select(irr1, irr2, irr3) %>%
+        dplyr::rename("irr1x" = "irr1", "irr2x" = "irr2", "irr3x" = "irr3")),
+    
+    bind_cols(
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv10gsk") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3),
+      
+      mw_pcvsamples %>%
+        dplyr::filter(pcv == "pcv13pfz") %>%
+        dplyr::mutate(irr1 = 1-irr1, irr2 = 1-irr2, irr3 = 1-irr3) %>%
+        dplyr::select(irr1, irr2, irr3) %>%
+        dplyr::rename("irr1x" = "irr1", "irr2x" = "irr2", "irr3x" = "irr3"))) %>%
+  
+  dplyr::mutate(imp1 = irr1-irr1x, imp2 = irr2-irr2x, imp3 = irr3-irr3x)
+
+#summary of net preventable disease estimates
+mw_impactEst <-
+  mw_netImpact %>% 
+  group_by(pcv) %>%
+  summarise(imp1M = quantile(imp1, 0.500),
+            imp1L = quantile(imp1, 0.025),
+            imp1U = quantile(imp1, 0.975),
+            imp2M = quantile(imp2, 0.500),
+            imp2L = quantile(imp2, 0.025),
+            imp2U = quantile(imp2, 0.975),
+            imp3M = quantile(imp3, 0.500),
+            imp3L = quantile(imp3, 0.025),
+            imp3U = quantile(imp3, 0.975))

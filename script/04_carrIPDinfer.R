@@ -752,71 +752,71 @@ ggsave(here("output", "sfig6_ipd_predValidation.png"),
 #CONSOLIDATED PLOT
 #====================================================================
 
-consol <-
-  bind_rows(
-    is_ipda2013 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "post-PCV"),
-    is_ipdb2009 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "pre-PCV"),
-    sa_ipda2015 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "post-PCV"),
-    sa_ipdb2009 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "pre-PCV"),
-    mw_ipda2015_pred %>% mutate(country = "Malawi") %>% dplyr::select(st, country, ipd) %>% group_by(country, st) %>% tally(ipd) %>% mutate(phase = "post-PCV"),
-    mw_ipdb2011_obs %>% mutate(country = "Malawi") %>% dplyr::select(st, country, ipd) %>% group_by(country, st) %>% tally(ipd) %>% mutate(phase = "pre-PCV")) %>%
-  
-  dplyr::mutate(pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20-VT", "PCV20-NVT"),
-                pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15-VT", "PCV15-NVT"),
-                pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13-VT", "PCV13-NVT"),
-                pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii-VT", "PCV10-sii-NVT"),
-                pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk-VT", "PCV10-gsk-NVT"))
-
-bind_rows(
-consol %>%
-  group_by(country, phase, pcv20pfz) %>%
-  tally(n) %>%
-  mutate(p = n/sum(n), fct = "PCV20") %>%
-  rename("sg" = "pcv20pfz") %>%
-  mutate(p = n/sum(n)),
-
-consol %>%
-  group_by(country, phase, pcv15mek) %>%
-  tally(n) %>%
-  mutate(p = n/sum(n), fct = "PCV15") %>%
-  rename("sg" = "pcv15mek") %>%
-  mutate(p = n/sum(n)),
-
-consol %>%
-  group_by(country, phase, pcv13pfz) %>%
-  tally(n) %>%
-  mutate(p = n/sum(n), fct = "PCV13") %>%
-  rename("sg" = "pcv13pfz") %>%
-  mutate(p = n/sum(n)),
-
-consol %>%
-  group_by(country, phase, pcv10sii) %>%
-  tally(n) %>%
-  mutate(p = n/sum(n), fct = "PCV10-sii") %>%
-  rename("sg" = "pcv10sii") %>%
-  mutate(p = n/sum(n)),
-
-consol %>%
-  group_by(country, phase, pcv10gsk) %>%
-  tally(n) %>%
-  mutate(p = n/sum(n), fct = "PCV10-gsk") %>%
-  rename("sg" = "pcv10gsk") %>%
-  mutate(p = n/sum(n))) %>%
-  
-  mutate(samples = "IPD") %>%
-
-  ggplot() +
-  geom_col(aes(x = sg, y = p, fill = sg), color = "black", size = 0.5) +
-  theme_bw(base_size = 16, base_family = "Lato") +
-  labs(title = "", x = "serotype group", y = "proportion of observed/inferred IPD") +
-  ggh4x::facet_nested(samples ~ country + phase, scales = "free_y") +
-  theme(axis.text.x=element_blank()) +
-  theme(strip.text.x = element_text(size = 20), strip.text.y = element_text(size = 20), strip.background = element_rect(fill = "white")) +
-  guides(color = guide_legend(title = "")) +
-  theme(legend.text = element_text(size = 12), legend.position = "bottom", legend.title = element_text(size = 12)) +
-  theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
-
-#save combined plots
-ggsave(here("output", "fig1_ipdsgDist.png"),
-       plot = (D),
-       width = 16, height = 9, unit = "in", dpi = 300)
+# consol <-
+#   bind_rows(
+#     is_ipda2013 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "post-PCV"),
+#     is_ipdb2009 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "pre-PCV"),
+#     sa_ipda2015 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "post-PCV"),
+#     sa_ipdb2009 %>% dplyr::select(st, country) %>% group_by(country, st) %>% tally() %>% mutate(phase = "pre-PCV"),
+#     mw_ipda2015_pred %>% mutate(country = "Malawi") %>% dplyr::select(st, country, ipd) %>% group_by(country, st) %>% tally(ipd) %>% mutate(phase = "post-PCV"),
+#     mw_ipdb2011_obs %>% mutate(country = "Malawi") %>% dplyr::select(st, country, ipd) %>% group_by(country, st) %>% tally(ipd) %>% mutate(phase = "pre-PCV")) %>%
+#   
+#   dplyr::mutate(pcv20pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|8|9V|10A|11A|12F|14|15B|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV20-VT", "PCV20-NVT"),
+#                 pcv15mek = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|22F|23F|33F)\\b", st) == TRUE, "PCV15-VT", "PCV15-NVT"),
+#                 pcv13pfz = if_else(grepl("\\b(1|3|4|5|6A|6B|7F|9V|14|18C|19A|19F|23F)\\b", st) == TRUE, "PCV13-VT", "PCV13-NVT"),
+#                 pcv10sii = if_else(grepl("\\b(1|5|6A|6B|7F|9V|14|19A|19F|23F)\\b", st) == TRUE, "PCV10-sii-VT", "PCV10-sii-NVT"),
+#                 pcv10gsk = if_else(grepl("\\b(1|4|5|6B|7F|9V|14|18C|19F|23F)\\b", st) == TRUE, "PCV10-gsk-VT", "PCV10-gsk-NVT"))
+# 
+# bind_rows(
+# consol %>%
+#   group_by(country, phase, pcv20pfz) %>%
+#   tally(n) %>%
+#   mutate(p = n/sum(n), fct = "PCV20") %>%
+#   rename("sg" = "pcv20pfz") %>%
+#   mutate(p = n/sum(n)),
+# 
+# consol %>%
+#   group_by(country, phase, pcv15mek) %>%
+#   tally(n) %>%
+#   mutate(p = n/sum(n), fct = "PCV15") %>%
+#   rename("sg" = "pcv15mek") %>%
+#   mutate(p = n/sum(n)),
+# 
+# consol %>%
+#   group_by(country, phase, pcv13pfz) %>%
+#   tally(n) %>%
+#   mutate(p = n/sum(n), fct = "PCV13") %>%
+#   rename("sg" = "pcv13pfz") %>%
+#   mutate(p = n/sum(n)),
+# 
+# consol %>%
+#   group_by(country, phase, pcv10sii) %>%
+#   tally(n) %>%
+#   mutate(p = n/sum(n), fct = "PCV10-sii") %>%
+#   rename("sg" = "pcv10sii") %>%
+#   mutate(p = n/sum(n)),
+# 
+# consol %>%
+#   group_by(country, phase, pcv10gsk) %>%
+#   tally(n) %>%
+#   mutate(p = n/sum(n), fct = "PCV10-gsk") %>%
+#   rename("sg" = "pcv10gsk") %>%
+#   mutate(p = n/sum(n))) %>%
+#   
+#   mutate(samples = "IPD") %>%
+# 
+#   ggplot() +
+#   geom_col(aes(x = sg, y = p, fill = sg), color = "black", size = 0.5) +
+#   theme_bw(base_size = 16, base_family = "Lato") +
+#   labs(title = "", x = "serotype group", y = "proportion of observed/inferred IPD") +
+#   ggh4x::facet_nested(samples ~ country + phase, scales = "free_y") +
+#   theme(axis.text.x=element_blank()) +
+#   theme(strip.text.x = element_text(size = 20), strip.text.y = element_text(size = 20), strip.background = element_rect(fill = "white")) +
+#   guides(color = guide_legend(title = "")) +
+#   theme(legend.text = element_text(size = 12), legend.position = "bottom", legend.title = element_text(size = 12)) +
+#   theme(panel.border = element_rect(colour = "black", fill = NA, size = 2))
+# 
+# #save combined plots
+# ggsave(here("output", "fig1_ipdsgDist.png"),
+#        plot = (D),
+#        width = 16, height = 9, unit = "in", dpi = 300)
