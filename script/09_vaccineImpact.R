@@ -123,7 +123,7 @@ ggsave(here("output", "sfig8_vaximpact.png"),
 #plot of vaccine preventable IPD distributions
 F <-
   bind_rows(is_netImpact, sa_netImpact, mw_netImpact) %>%
-  dplyr::filter(pcv != "pcv13pfz") %>%
+  dplyr::filter(pcv != "pcv13pfz", pcv != "pcv10gsk") %>%
   ggplot() +
   #geom_density(aes(x = imp1, group = pcv, fill = "no SR"), size = 0.6, alpha = 0.3) +
   geom_density(aes(x = imp2, group = pcv, fill = "baseline SR"), size = 0.6, alpha = 0.3) +
