@@ -1,0 +1,37 @@
+country,pcv,catx,imp1M,imp1L,imp1U
+Israel,PCV10S,Serotype 3 as NVT,0,-0.015,0
+Israel,PCV10S,20% ST replacement,0.008,-0.046,0.053
+Israel,PCV10S,20% vaccine coverage,0.023,-0.168,0.214
+Israel,PCV15,Serotype 3 as NVT,-0.015,-0.046,0
+Israel,PCV15,20% ST replacement,0.008,-0.046,0.061
+Israel,PCV15,20% vaccine coverage,-0.061,-0.252,0.122
+Israel,PCV20,Serotype 3 as NVT,-0.023,-0.046,0
+Israel,PCV20,20% ST replacement,0.015,-0.038,0.076
+Israel,PCV20,20% vaccine coverage,-0.282,-0.435,-0.13
+South Africa,PCV10S,Serotype 3 as NVT,0,-0.01,0
+South Africa,PCV10S,20% ST replacement,0.005,-0.026,0.031
+South Africa,PCV10S,20% vaccine coverage,0.036,-0.114,0.187
+South Africa,PCV15,Serotype 3 as NVT,-0.031,-0.057,-0.01
+South Africa,PCV15,20% ST replacement,0.005,-0.026,0.031
+South Africa,PCV15,20% vaccine coverage,-0.01,-0.161,0.14
+South Africa,PCV20,Serotype 3 as NVT,-0.031,-0.062,-0.01
+South Africa,PCV20,20% ST replacement,0.026,-0.005,0.062
+South Africa,PCV20,20% vaccine coverage,-0.207,-0.326,-0.083
+Brazil,PCV10S,Serotype 3 as NVT,0,0,0
+Brazil,PCV10S,20% ST replacement,0.019,-0.006,0.05
+Brazil,PCV10S,20% vaccine coverage,-0.214,-0.377,-0.05
+Brazil,PCV15,Serotype 3 as NVT,-0.069,-0.22,0.082
+Brazil,PCV15,20% ST replacement,0.013,-0.013,0.038
+Brazil,PCV15,20% vaccine coverage,-0.289,-0.428,-0.145
+Brazil,PCV20,Serotype 3 as NVT,-0.075,-0.126,-0.038
+Brazil,PCV20,20% ST replacement,0.044,0.013,0.082
+Brazil,PCV20,20% vaccine coverage,-0.333,-0.465,-0.189
+Malawi,PCV10S,Serotype 3 as NVT,0,-0.009,0
+Malawi,PCV10S,20% ST replacement,0,-0.035,0.043
+Malawi,PCV10S,20% vaccine coverage,0.017,-0.174,0.209
+Malawi,PCV15,Serotype 3 as NVT,-0.009,-0.035,0
+Malawi,PCV15,20% ST replacement,0,-0.035,0.035
+Malawi,PCV15,20% vaccine coverage,-0,-0.191,0.183
+Malawi,PCV20,Serotype 3 as NVT,-0.009,-0.035,0
+Malawi,PCV20,20% ST replacement,0.052,0.009,0.104
+Malawi,PCV20,20% vaccine coverage,-0.035,-0.226,0.157

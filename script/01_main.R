@@ -4,9 +4,9 @@
 
 #====================================================================
 
-##CONSIDERATION
+#CONSIDERATIONS
 # We to measure the potential benefits of newer PCVs over existing PCVs
-# We evaluate the impact of SII's PCV10, Merck's PCV15 and Pfizer's PCV20 on childhood IPD in low-middle income settings 
+# We evaluate the impact of SII's PCV10, Merck's PCV15 and Pfizer's PCV20 on childhood IPD in low/middle/high-income settings 
 # IPD is considered endpoint because its easy to measure
 # We account for the fact that newer vaccines may not be as effective as PCV13 due to serological inferiority of higher valency PCV
 # Analysis assumes a country's PCV program under which carriage/IPD was observed post-PCV is matured under current PCV schedule
@@ -18,7 +18,7 @@ if(!require(pacman)) install.packages("pacman")
 
 #load packages for analysis
 pacman::p_load(char = c("lubridate", "tidyverse", "dplyr", "tidyr", "broom", "rio", "scales", "boot", "magrittr", "MASS", "ggridges", "htmlTable", "lme4", 
-                        "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "missForest", "MLmetrics", "Metrics", "here"))
+                        "mvtnorm", "zoo", "stringr", "patchwork", "PropCIs", "reshape2","purrr", "tsibble", "missForest", "MLmetrics", "Metrics", "pbapply", "here"))
 
 #set seed using a task call for entire session to ensure reproducibility
 addTaskCallback(function(...) {set.seed(1988); TRUE})
@@ -32,25 +32,25 @@ addTaskCallback(function(...) {set.seed(1988); TRUE})
 source("script/02_manageData.R")
 
 #describe pneumococcal serotype carriage and IPD isolates
-source("script/03_descCarrIPD.R")
+source("script/03_israelData.R")
 
 #fit pre-PCV IPD (+ invasiveness) in Malawi and South Africa to infer pre-PCV carriage
-source("script/04_carrIPDinfer.R")
+source("script/04_brazilData.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/05_ispredModels.R")
+source("script/05_southafricaData.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/06_sapredModels.R")
+source("script/06_malawiData.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/07_mwpredModels.R")
+source("script/07_ipdcarrDescription.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-#source("script/08_brpredModels.R")
+source("script/08_modelValidation.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/09_vaccineImpact.R")
+source("script/09_modelForecast.R")
 
 #load datasets for pneumococcal carriage and IPD during PCV13 era
-source("script/10_sensModels.R")
+source("script/10_modelSensitivity.R")
